@@ -5,7 +5,7 @@ $root = $ProjectRoot
 & python (Join-Path $PSScriptRoot 'prepare-shared-entry-test.py') --root $root
 if ($LASTEXITCODE -ne 0) { throw 'Cannot prepare actual staged hook bodies.' }
 $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio/Installer/vswhere.exe'
-$vs = & $vswhere -latest -products '*' -version '[17.0,18.0)' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+$vs = & $vswhere -latest -prerelease -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
 $dev = Join-Path $vs 'Common7/Tools/VsDevCmd.bat'
 $build = Join-Path $root 'build/shared-entry-tests'
 $source = Join-Path $PSScriptRoot 'cpp/shared_entry_tests.cpp'

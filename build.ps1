@@ -18,9 +18,16 @@ $lockfile = Join-Path $projectRoot 'conan-release.lock'
 $profile = Join-Path $projectRoot 'scripts/vs2022.profile'
 $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio/Installer/vswhere.exe'
 if (-not (Test-Path $vswhere)) { throw 'Visual Studio Installer vswhere.exe is required.' }
-$vsRoot = & $vswhere -latest -products '*' -version '[17.10,18.0)' `
+$vsRoot = & $vswhere -latest -prerelease -products '*' `
     -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
-if ($LASTEXITCODE -ne 0 -or -not $vsRoot) { throw 'Visual Studio 2022 17.10+ Desktop C++ tools are required.' }
+if ($LASTEXITCODE -ne 0 -or -not $vsRoot) { throw 'Visual Studio 2022+ Desktop C++ tools are required.' }
+$vsVersion = & $vswhere -latest -prerelease -products '*' `
+    -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationVersion
+$cmakeGenerator = if ($vsVersion -and [version]$vsVersion -ge [version]'18.0') {
+    'Visual Studio 18 2026'
+} else {
+    'Visual Studio 17 2022'
+}
 if (-not (Test-Path $pythonExe)) {
     & python -m venv $venvRoot
     if ($LASTEXITCODE -ne 0) { throw 'Failed to create the build environment.' }
@@ -39,7 +46,7 @@ try {
         -c "tools.build:jobs=$CompilerProcesses"
     if ($LASTEXITCODE -ne 0) { throw 'Conan dependency installation failed.' }
     & $cmakeExe -S (Join-Path $projectRoot 'scripts') -B $buildRoot `
-        -G 'Visual Studio 17 2022' -A x64 `
+        -G $cmakeGenerator -A x64 `
         "-DCMAKE_GENERATOR_INSTANCE=$vsRoot" `
         "-DCMAKE_CONFIGURATION_TYPES=$Configuration" `
         "-DVR_COMPILER_PROCESSES=$CompilerProcesses" `

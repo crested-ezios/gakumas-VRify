@@ -16,4 +16,5 @@ class VrDependencies(ConanFile):
         CMakeDeps(self).generate()
         toolchain = CMakeToolchain(self)
         toolchain.user_presets_path = False
+        toolchain.blocks["generic_system"].values["toolset"] = None
         toolchain.generate()

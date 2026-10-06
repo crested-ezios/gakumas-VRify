@@ -8,4 +8,4 @@ compiler.runtime=dynamic
 build_type=Release
 
 [conf]
-tools.cmake.cmaketoolchain:generator=Visual Studio 17 2022
+tools.cmake.cmaketoolchain:generator=Visual Studio 18 2026
