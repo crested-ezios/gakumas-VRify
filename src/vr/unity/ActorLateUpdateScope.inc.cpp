@@ -6,5 +6,6 @@
         ~ActorLateUpdateScope() {
             gakumas::vr::TickNaturalLiveGaze(actor);
             gakumas::vr::TraceLiveGazeStage(actor, nullptr, "actor-late-after");
+            GakumasLocal::ModLoader::DispatchLateUpdate(actor, 0.0f);
         }
     };

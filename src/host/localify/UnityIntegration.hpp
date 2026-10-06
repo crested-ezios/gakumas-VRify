@@ -40,6 +40,7 @@
 
 #ifdef GKMS_WINDOWS
     #include "host/VrWindowsPlatform.hpp"
+    #include "host/localify/ModLoader.hpp"
     #include "vr/VrRuntime.hpp"
     #include "vr/VrFreeCamera.hpp"
     #include "vr/camera/FollowSmoothingProbe.hpp"

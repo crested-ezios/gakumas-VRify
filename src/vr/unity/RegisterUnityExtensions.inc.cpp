@@ -1086,4 +1086,5 @@
         }
 #endif
 
+        GakumasLocal::ModLoader::DispatchUnityReady();
     }

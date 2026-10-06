@@ -8,8 +8,10 @@
 #include "vr/VrRuntime.hpp"
 #include "GakumasLocalify/Il2cppUtils.hpp"
 #include "gkmsGUI/gkmsGUIMain.hpp"
+#include "gkmsGUI/gkmsGUILoop.hpp"
 #include "gkmsGUI/GUII18n.hpp"
 #include "hooks/HookManager.hpp"
+#include "host/localify/ModLoader.hpp"
 #include "resourceUpdate/resourceUpdate.hpp"
 
 #include <stdinclude.hpp>
@@ -24,14 +26,44 @@
 #include <filesystem>
 #include <fstream>
 #include <sstream>
+#include <thread>
 #include <vector>
 
 extern std::filesystem::path gakumasLocalPath;
 extern std::filesystem::path ConfigJson;
 extern std::filesystem::path ProgramConfigJson;
 extern std::function<void()> on_hotKey_0;
+extern HWND hwnd;
+
 namespace
 {
+    std::atomic_bool g_guiStarting{false};
+
+    void TriggerGuiWindow() {
+        bool expected = false;
+        if (g_guiStarting.compare_exchange_strong(expected, true)) {
+            std::thread([]() {
+                printf("[Localify] GUI START\n");
+                guimain();
+                g_guiStarting.store(false, std::memory_order_release);
+                printf("[Localify] GUI END\n");
+            }).detach();
+        } else {
+            if (hwnd && IsWindow(hwnd)) {
+                ShowWindow(hwnd, SW_SHOW);
+                SetForegroundWindow(hwnd);
+            }
+        }
+    }
+
+    void (*g_origGkmsMainLoop)() = nullptr;
+    void HookedGkmsMainLoop() {
+        if (g_origGkmsMainLoop) {
+            g_origGkmsMainLoop();
+        }
+        GakumasLocal::ModLoader::DispatchRenderGui();
+    }
+
     class WindowsHookInstaller final : public GakumasLocal::HookInstaller
     {
     public:
@@ -95,6 +127,7 @@ namespace
         plugin.InstallHook(std::make_unique<WindowsHookInstaller>(
             "GameAssembly.dll",
             gakumasLocalPath.string()));
+        GakumasLocal::ModLoader::Initialize(std::filesystem::current_path(), gakumasLocalPath);
     }
 
     DWORD WINAPI PatchWorker(LPVOID parameter) {
@@ -179,6 +212,7 @@ namespace
 }
 
 void unInitHook() {
+    GakumasLocal::ModLoader::Shutdown();
     GakumasVR::Hooks::Shutdown();
 }
 
@@ -220,18 +254,18 @@ bool initHook() {
         return true;
     }
 
-    if (GakumasLocal::Config::enabled) {
-        static std::atomic_bool guiStarting = false;
-		on_hotKey_0 = []() {
-            bool expected = false;
-            if (!guiStarting.compare_exchange_strong(expected, true)) return;
-            std::thread([]() {
-                printf("GUI START\n");
-                guimain();
-                guiStarting.store(false, std::memory_order_release);
-                printf("GUI END\n");
-                }).detach();
-			};
+    on_hotKey_0 = TriggerGuiWindow;
+
+    const auto guiLoopHookStatus = GakumasVR::Hooks::CreateAndEnableHook(
+        reinterpret_cast<void*>(&GkmsGUILoop::mainLoop),
+        reinterpret_cast<void*>(HookedGkmsMainLoop),
+        reinterpret_cast<void**>(&g_origGkmsMainLoop));
+    if (guiLoopHookStatus != MH_OK) {
+        GakumasLocal::Log::ErrorFmt(
+            "[ModLoader] GkmsGUILoop::mainLoop hook failed: %s",
+            MH_StatusToString(guiLoopHookStatus));
+    } else {
+        GakumasLocal::Log::Info("[ModLoader] GkmsGUILoop::mainLoop hook active for plugin GUI dispatch.");
     }
 
     if (GetModuleHandleW(L"VuplexWebViewWindows.dll")) {
@@ -477,6 +511,12 @@ using Il2cppString = UnityResolve::UnityType::String;
                     g_quitWindow = nullptr;
                 }
             }; break;
+            case WM_KEYDOWN: {
+                if ((GetKeyState(VK_CONTROL) & 0x8000) != 0 && (wParam == 'M' || wParam == 'm')) {
+                    TriggerGuiWindow();
+                    return true;
+                }
+            } break;
         }
         return false;
     }
