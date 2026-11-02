@@ -29,6 +29,7 @@ bool Initialize() { return true; }
 void Shutdown() {}
 const GakuDesktopUiService* GetService() { return nullptr; }
 const GakuDesktopWindowService* GetWindowService() { return nullptr; }
+const GakuAppearanceService* GetAppearanceService() { return nullptr; }
 GakuStatus RequestShowPanel(const char*) { return GAKU_E_UNAVAILABLE; }
 void ToggleManager() {}
 bool WantsTextInput() { return false; }

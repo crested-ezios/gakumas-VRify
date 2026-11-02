@@ -27,8 +27,13 @@ foreach ($path in @($cameraProviderHeader, $cameraProviderAbi)) {
     if (-not (Test-Path -LiteralPath $path)) { throw "Localify camera/render provider source missing: $path" }
 }
 $consumerAbi = Join-Path $projectRoot 'src/host/GakuLocalifyCameraRender.h'
-if (-not (Test-Path -LiteralPath $consumerAbi) -or
-    (Get-FileHash -LiteralPath $consumerAbi).Hash -ne (Get-FileHash -LiteralPath $cameraProviderAbi).Hash) {
+if (-not (Test-Path -LiteralPath $consumerAbi)) { throw "VRify camera/render consumer ABI missing: $consumerAbi" }
+# Git may check out the identical ABI as CRLF in one repository and LF in another.
+# Decode strict UTF-8 and normalize only CRLF; every other character stays exact.
+$strictUtf8 = [Text.UTF8Encoding]::new($false, $true)
+$consumerAbiText = $strictUtf8.GetString([IO.File]::ReadAllBytes($consumerAbi)).Replace("`r`n", "`n")
+$providerAbiText = $strictUtf8.GetString([IO.File]::ReadAllBytes($cameraProviderAbi)).Replace("`r`n", "`n")
+if (-not [string]::Equals($consumerAbiText, $providerAbiText, [StringComparison]::Ordinal)) {
     throw 'Localify camera/render provider and VRify consumer ABI headers differ.'
 }
 if (-not (Test-Path -LiteralPath $PluginPath)) { throw "Build the production plugin first: $PluginPath" }
@@ -152,6 +157,7 @@ $report = [ordered]@{ test = 'GakuVRify VR-less smoke'; created = (Get-Date -For
     cameraProviderFixtureSha256 = (Get-FileHash -LiteralPath $fakeProvider).Hash.ToLowerInvariant();
     cameraProviderSourceSha256 = (Get-FileHash -LiteralPath $cameraProviderHeader).Hash.ToLowerInvariant();
     cameraProviderAbiSha256 = (Get-FileHash -LiteralPath $cameraProviderAbi).Hash.ToLowerInvariant();
+    cameraConsumerAbiSha256 = (Get-FileHash -LiteralPath $consumerAbi).Hash.ToLowerInvariant();
     limits = @('IL2CPP metadata is a fixture, not real Unity/game execution',
         'OpenXR test backend never supplies a system/session/pose',
         'The host window/frame-pump bootstrap and headset visuals are not tested',
