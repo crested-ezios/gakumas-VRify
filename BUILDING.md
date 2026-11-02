@@ -1,90 +1,105 @@
 # Building gakumas-VRify
 
+The default target is the GakuLoader plugin, `GakuVRify.dll`. The public repository includes its Loader ABI header and synthetic test fixtures. A plugin build does not require a private GakuLoader, Localify-provider or Motion implementation checkout.
+
 ## Requirements
 
-- Windows x64. The native OpenXR/D3D11 DLL requires the Windows SDK and MSVC; Linux and macOS builds are not supported.
-- PowerShell 7 (`pwsh`), Git, and Python 3.11 with `python` on `PATH` and working `venv`/`pip` modules.
-- Visual Studio 2022 **17.10 or newer within the 2022 release family**, with **Desktop development with C++**, the **MSVC v143 x64/x86 build tools**, and a Windows 10 or Windows 11 SDK. The Conan profile targets MSVC 19.4x. Visual Studio 2019 or a different major toolset is not a substitute.
-- Network access to the locked Localify upstream, PyPI, Conan Center, and GitHub (for packaging the OpenXR loader).
+- Windows x64, PowerShell 7, Git, and Python 3.11 or newer with working `venv` and `pip`.
+- Visual Studio 2022 or newer Desktop C++ tools, MSVC x64 toolset 14.40 or newer, and a Windows SDK. The consumer uses the newest installed compatible toolset in the selected VS instance. The script prints that toolset, pins it in CMake, selects the matching VS17/VS18 generator, and generates a Conan profile for that compiler. MSVC 14.53 is the locally validated consumer; other compatible toolchains require their own build validation.
+- Network access for the exact Localify upstream, PyPI, Conan packages and, when packaging, the official Khronos OpenXR loader. Existing verified caches may be reused.
 
-A game installation and headset are not needed to compile or run the included offline tests. They are needed to validate actual VR rendering.
+A game installation and headset are not needed for compilation or the public synthetic checks. Successful rendering and camera composition require separate runtime validation.
 
-## Fetch and build
+## Build the plugin
 
-Run these commands in PowerShell 7:
+Run from PowerShell 7:
 
 ```powershell
-git clone https://github.com/KagaminTheMirror/gakumas-VRify.git
+git clone --branch feat/plugin-host https://github.com/crested-ezios/gakumas-VRify.git
 Set-Location gakumas-VRify
-./scripts/fetch-upstream.ps1
-./build.ps1 -Configuration Release
+./build.ps1 -Mode Plugin -Configuration Release
 ```
 
-`fetch-upstream.ps1` downloads the exact commit in `upstream.lock.json` into `.upstream/localify/` as a shallow, detached checkout. It verifies the commit, tree, origin URL, and clean working directory. It never merges upstream history into this repository. Repeating the command verifies and reuses the checkout. The locked upstream commit contains its dependency sources, so no recursive submodule update is required.
+The default SDK is [`sdk/gakuloader/`](sdk/gakuloader/PROVENANCE.md), containing `GakuPlugin.h` and its complete MIT license. To test another compatible SDK explicitly, pass `-LoaderSdkDirectory '<sdk include directory>'`. This changes a build input, so rebuild and revalidate the resulting DLL.
 
-`build.ps1` also calls the fetch script, so an explicit fetch is optional. It then:
+The build script:
 
-1. Creates a Python environment in `.tools/build/` and installs the pinned versions in `scripts/build-requirements.txt` (Conan 2.32.0 and CMake 4.4.3).
-2. Verifies upstream, copies its `src/` and `deps/` into `build/source/`, and adds only the local `src/host/`, `src/hooks/`, `src/vr/`, and `deps/openxr/` directories. An ownership collision stops the build.
-3. Applies the reviewed seam and compatibility patches from `patches/manifest.json`, including ImGui fixes. Input blobs, patch digests and output hashes must match exactly; failure invalidates staging. The upstream checkout remains unchanged.
-4. Resolves dependencies using `conan-release.lock`, `scripts/vs2022.profile`, and the repository-local `.tools/conan2/` cache.
-5. Configures CMake and compiles the staged upstream implementations plus owned adapters. Whole-file substitutions are forbidden. Build, package and installation verify staging and binary receipts to reject stale products.
+1. Verifies/fetches the detached Localify checkout pinned by `upstream.lock.json` into `.upstream/localify/`.
+2. Creates `.tools/build/` and installs Conan 2.32.0 and CMake 4.4.3 from `scripts/build-requirements.txt`.
+3. Stages upstream `src/` and `deps/` plus this repository's owned adapters into `build/source/`. Patch inputs, digests and output hashes must match `patches/manifest.json`; the fetched upstream remains unchanged.
+4. Resolves the Conan lock/profile with the repository-local `.tools/conan2/` cache, configures CMake and builds the plugin.
+5. Records source, SDK and binary receipts used to reject stale packaging inputs.
 
-The output is **`build/bin/x64/Release/version.dll`**, with a PDB alongside it. The build does not install anything into the game. Local source changes must be rebuilt through `build.ps1` so that the combined source tree is refreshed; editing `build/source/` directly is temporary and unsupported.
+Output: **`build/bin/plugin/x64/Release/GakuVRify.dll`**, with a PDB. The script does not install it into a game. Edit owned sources, then rebuild through `build.ps1`; direct edits to generated `build/source/` are not permanent changes.
 
-To reduce memory pressure or build Debug instead:
+Use `-CompilerVersion 14.53.36919` to select an exact installed toolset. Use `-Offline` only with an already available locked upstream, Python tools and Conan binaries; it forbids dependency downloads/rebuilds. It is not a self-contained offline installer. `-DependencyCompilerVersion 194` explicitly selects dependencies built for the older compatible MSVC 19.4 ABI while retaining the actual newer consumer compiler. This is an optional cache-reuse choice, not a claim that the consumer is compiler 19.4. The local validation used `-Offline -DependencyCompilerVersion 194 -CompilerVersion 14.53.36919`; rebuilding the dependencies themselves under 19.5 was not tested.
 
-```powershell
-./build.ps1 -Configuration Release -CompilerProcesses 2
-./build.ps1 -Configuration Debug
-```
+Use `-CompilerProcesses 2` to reduce memory pressure, or `-Configuration Debug` for a Debug build. Historical Release results do not establish that Debug or a new toolchain has passed. Compiler versions, paths and dependency binaries can affect output hashes; byte-identical DLLs are not promised.
 
-Release is the validated distribution configuration. Debug may require additional Conan dependency builds. The dependency graph is locked, but compiler versions, paths, timestamps and available package binaries can affect DLL hashes; byte-identical output is not promised.
+## Public checks
 
-## Offline checks
+These checks use this repository's sources, the included SDK and generated fixtures:
 
 ```powershell
-./scripts/test-upstream-boundary.ps1
-./tests/test-source-layout.ps1
+./tests/test-source-pipeline.ps1
+./tests/test-camera-provider.ps1
 ./tests/test-head-pose-core.ps1
-./tests/test-pointer-smoother.ps1
 ```
 
-The source-layout check runs after a build (or `./scripts/prepare-source.ps1`) and verifies that staged inputs match their original files. The C++ tests compile standalone harnesses with VS2022 and test pose calculations/mailboxes and pointer smoothing without a game or OpenXR runtime. They do not establish visual correctness on a headset.
-
-## Package and install
+After building the plugin, run its production-DLL lifecycle and mock-host tests:
 
 ```powershell
+./tests/test-hosted-plugin.ps1 -Configuration Release
+```
+
+The mock host exercises the real plugin DLL and owned hook facade without compiling a private Loader implementation. Source-pipeline tests create artificial upstream repositories; they are not verification of an installed game or the real upstream build tree.
+
+For an already prepared combined source tree, `./scripts/test-upstream-boundary.ps1` and `./tests/test-source-layout.ps1` check the actual pinned/staged-source boundary. These need the upstream checkout and generated staging from the build, rather than only fixture tests.
+
+## Optional maintainer integration
+
+The following tests are research/integration checks, not prerequisites for a normal public plugin build:
+
+| Check | Additional inputs and limits |
+| --- | --- |
+| `tests/test-vrless-smoke.ps1` with `-RunMaintainerIntegration` | Built plugin, separately supplied GakuLoader implementation/MinHook and Localify provider sources, plus the pinned official loader. It compiles a real host and provider fixture. It does not prove headset rendering. |
+| `tests/test-camera-begin.py` with explicit maintainer opt-in | Separately supplied Motion implementation; extracts its actual handshake/callback to compare with the public provider. The Motion core is not bundled here. |
+| `tests/vrless/OpenXrAvailabilityProbe.cpp` | Separate manual diagnostic source for an installed OpenXR runtime/device. The smoke runner does not invoke it, and it is not part of default synthetic checks. |
+
+Pass `-GakuLoaderRoot`, `-LocalifyRoot` and `-RealOpenXrLoader` explicitly to the smoke runner as needed. Do not obtain missing integration inputs by copying private core implementations into this repository. Historical integration results and public mock-host results cover different inputs.
+
+## Package and install the plugin
+
+```powershell
+./package-plugin.ps1 -Configuration Release
+```
+
+This verifies the build receipt, fetches/verifies the official Khronos OpenXR loader 1.1.61 and creates `build/plugin-package/`, including component licenses and a file-hash manifest. Package contents and recovery are described in [the plugin guide](docs/GAKULOADER_PLUGIN.md).
+
+Installation changes a game directory. Close the game first and use the package matched to your Loader and any cooperating providers:
+
+```powershell
+./install-plugin.ps1 -Configuration Release -GameRoot '<directory containing gakumas.exe>'
+```
+
+`install-to-game.ps1` also defaults to Plugin mode. The generic installer refuses full Unity VR alongside Localify/Motion because it does not validate/upgrade their matching provider pair. Shared bridge implementations do not remove that packaging guard. It preserves existing VR settings and records backups/recovery under `build/plugin-deployments/`.
+
+## Standalone proxy workflow
+
+The original standalone mode is separate from the GakuLoader plugin:
+
+```powershell
+./build.ps1 -Mode Standalone -Configuration Release
 ./package-vr.ps1 -Configuration Release
-./install-to-game.ps1 -Configuration Release -GameRoot 'D:\Games\gakumas'
+./install-to-game.ps1 -Mode Standalone -Configuration Release -GameRoot '<directory containing gakumas.exe>'
 ```
 
-Replace the example path with the directory containing `gakumas.exe`. Close the game first. Packaging creates `build/vr-package/` and downloads the official Khronos OpenXR loader **1.1.61 x64**, checking both the archive and DLL against the SHA-256 values embedded in the script. The installer packages automatically unless passed `-SkipPackage`.
+Its output is `build/bin/x64/Release/version.dll`, and its package is `build/vr-package/`. It supplies a proxy rather than a GakuLoader plugin; do not install both proxies together. The upstream Releases refer to this standalone workflow, not a new plugin binary certification.
 
-Only these five paths are installed into the game:
+## Troubleshooting
 
-```text
-version.dll
-openxr_loader.dll
-gakumas-local/config.json
-gakumas-local/localizationConfig.json
-gakumas-vr/config.json
-```
-
-The installer merges existing settings and keeps VR configuration separate from Localify. The release package contains only the two DLLs, three JSON configuration files, and a `version.txt` in each of `gakumas-local/` and `gakumas-vr/`. The Localify marker contains the pinned upstream PLUGIN_VERSION (currently `v3.5.0`); the VR marker contains GAKUMAS_VR_VERSION (currently `v1.2.1`). Each file contains only its version, without BOM or newline. The five-file development installer does not copy these release markers. License sources are listed in `THIRD_PARTY_NOTICES.md`; licenses, build information and checksum files are not included in the release ZIP. Game assets and translation datasets are not part of this source repository.
-
-Ordinary installs disable VR diagnostic file logging. To collect a diagnostic log:
-
-```powershell
-./install-to-game.ps1 -GameRoot 'D:\Games\gakumas' -Probe
-```
-
-Restart the game after installation. Logs are written under the game's `gakumas-vr/logs/` directory. Installing again without `-Probe` disables diagnostic file logging.
-
-## Troubleshooting and cleanup
-
-- **Upstream fetch failed:** check access to the URL in `upstream.lock.json`. If a first fetch was interrupted, remove only the incomplete `.upstream/localify/` directory and rerun the fetch script.
-- **Upstream is dirty or has the wrong commit:** preserve any intentional edits elsewhere, then remove `.upstream/localify/` and fetch again. The script deliberately does not reset or overwrite a dirty checkout. Follow [UPSTREAM.md](UPSTREAM.md) when changing the pin.
-- **VS2022 was not found:** install the required C++ workload and v143 toolset; the script discovers the installation through `vswhere.exe`.
-- **Conan/Python downloads failed:** check the failing host and retry. `.tools/` is local to this repository; deleting it recreates the Python environment and Conan cache on the next build.
-- **Stale build files:** remove `build/` and rerun `build.ps1`. Both `build/` and `.tools/` contain generated files only. Never use the game installation as a build directory.
+- Missing SDK: check `sdk/gakuloader/GakuPlugin.h`, or the explicit override directory, before building.
+- Upstream mismatch/dirty checkout: preserve intentional work and follow [UPSTREAM.md](UPSTREAM.md); the fetch script does not overwrite a dirty checkout.
+- Compiler/profile mismatch: check the selected Visual Studio instance, actual MSVC toolset and the generated `build/vs2022/.../dependency.profile` together; `scripts/vs2022.profile` is only a VS2022 example. A generator name alone does not prove a compatible dependency graph.
+- Stale binary receipt: rebuild from owned sources; do not bypass the staging/SDK hash checks.
+- A fixture test passing is not a full DLL build, real upstream verification or game/headset acceptance. The dated reports retain those distinctions.

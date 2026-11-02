@@ -1,4 +1,7 @@
     bool ObserveMainCamera(UnityResolve::UnityType::Camera*& ret) {
+        #ifdef GAKU_VRIFY_HOSTED
+        if (!IsVrUnityRuntimeEnabled()) return false;
+        #endif
 #ifdef GKMS_WINDOWS
         if (AreVrUnityCameraDiagnosticsEnabled() && !sourceCameraQueryActive) {
             sourceAdmissionMainCalls.fetch_add(1U, std::memory_order_relaxed);

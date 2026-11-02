@@ -70,6 +70,22 @@ class StagingTests(unittest.TestCase):
         binary.write_bytes(b'changed DLL')
         with self.assertRaises(RuntimeError): pipeline.binary_receipt(self.root, binary, False)
 
+    def test_plugin_receipt_rejects_standalone_mode_and_sdk_drift(self):
+        pipeline.stage_sources(self.root)
+        binary = self.root / 'build/GakuVRify.dll'
+        binary.write_bytes(b'fixture plugin DLL')
+        sdk = self.root / 'scripts/GakuPlugin.h'
+        sdk.write_bytes(b'fixture ABI v1')
+        with self.assertRaises(RuntimeError):
+            pipeline.binary_receipt(self.root, binary, True, 'Plugin')
+        pipeline.binary_receipt(self.root, binary, True, 'Plugin', sdk)
+        pipeline.binary_receipt(self.root, binary, False, 'Plugin', sdk)
+        with self.assertRaises(RuntimeError):
+            pipeline.binary_receipt(self.root, binary, False)
+        sdk.write_bytes(b'changed ABI header')
+        with self.assertRaises(RuntimeError):
+            pipeline.binary_receipt(self.root, binary, False, 'Plugin', sdk)
+
     def test_lock_and_tree(self):
         for key in ['commit', 'tree']:
             changed = dict(self.lock, **{key: '0' * 40})

@@ -4,6 +4,7 @@ gakumas-VRify builds on Localify and includes adapted integration code under [GP
 
 | Component | Source and notices |
 | --- | --- |
+| GakuLoader consumer SDK | Unmodified public C ABI header in [sdk/gakuloader](sdk/gakuloader/PROVENANCE.md); complete [MIT notice](sdk/gakuloader/LICENSE), copyright 2026 GakuLoader Contributors. No Loader implementation is included. |
 | Localify | Pinned by `upstream.lock.json`; fetched license: `.upstream/localify/LICENSE` |
 | OpenXR header subset | [Provenance](deps/openxr/README.md), [Apache-2.0](deps/openxr/LICENSE-APACHE-2.0.txt) or [MIT](deps/openxr/LICENSE-MIT.txt) |
 | OpenXR loader | Official Khronos 1.1.61 binary fetched by `package-vr.ps1`; its supplied license is available in `.tools/openxr-loader-1.1.61/share/doc/openxr/LICENSE` after packaging |

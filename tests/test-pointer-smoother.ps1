@@ -16,10 +16,10 @@ $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer
 if (-not (Test-Path -LiteralPath $vswhere)) {
     throw 'Visual Studio Installer vswhere.exe was not found.'
 }
-$visualStudioRoot = & $vswhere -latest -products '*' -version '[17.0,18.0)' `
+$visualStudioRoot = & $vswhere -latest -prerelease -products '*' -version '[17.0,)' `
     -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
 if ($LASTEXITCODE -ne 0 -or -not $visualStudioRoot) {
-    throw 'Visual Studio 2022 with the Desktop C++ toolchain was not found.'
+    throw 'Visual Studio 2022+ with the Desktop C++ toolchain was not found.'
 }
 $devCommand = Join-Path ($visualStudioRoot | Select-Object -First 1) 'Common7\Tools\VsDevCmd.bat'
 

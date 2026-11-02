@@ -4,7 +4,7 @@ $root = Split-Path -Parent $PSScriptRoot
 & python (Join-Path $root 'scripts/source-pipeline.py') verify
 if ($LASTEXITCODE -ne 0) { throw 'Prepare staged sources before testing.' }
 $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio/Installer/vswhere.exe'
-$vs = & $vswhere -latest -products '*' -version '[17.0,18.0)' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+$vs = & $vswhere -latest -prerelease -products '*' -version '[17.0,)' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
 $dev = Join-Path $vs 'Common7/Tools/VsDevCmd.bat'
 $build = Join-Path $root 'build/hook-manager-tests'
 New-Item -ItemType Directory -Force -Path $build | Out-Null

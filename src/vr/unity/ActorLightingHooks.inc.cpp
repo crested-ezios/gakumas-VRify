@@ -199,6 +199,12 @@
 
     DEFINE_HOOK(void, ActorShadowPass_Configure,
                 (void* self, void* cmd, void* descriptor, void* method)) {
+#ifdef GAKU_VRIFY_HOSTED
+        if (!IsVrUnityRuntimeEnabled()) {
+            ActorShadowPass_Configure_Orig(self, cmd, descriptor, method);
+            return;
+        }
+#endif
 #ifdef GKMS_WINDOWS
         bool preserveLeftMap = false;
         try {
@@ -254,6 +260,12 @@
     DEFINE_HOOK(void, ActorShadowPass_DrawShadow,
                 (void* self, void* cmd, void* context, void* renderingData,
                  void* method)) {
+#ifdef GAKU_VRIFY_HOSTED
+        if (!IsVrUnityRuntimeEnabled()) {
+            ActorShadowPass_DrawShadow_Orig(self, cmd, context, renderingData, method);
+            return;
+        }
+#endif
 #ifdef GKMS_WINDOWS
         try {
             if (ReuseLeftActorShadowForRight(self, cmd)) {
@@ -276,6 +288,12 @@
 
     DEFINE_HOOK(void, ActorShadowPass_Execute,
                 (void* self, void* context, void* renderingData, void* method)) {
+#ifdef GAKU_VRIFY_HOSTED
+        if (!IsVrUnityRuntimeEnabled()) {
+            ActorShadowPass_Execute_Orig(self, context, renderingData, method);
+            return;
+        }
+#endif
         // Execute still runs (census + DrawShadow), but the projected
         // matrix is already final here. Keep the transform-swap bracket
         // so any remaining camera-transform reads inside DrawShadow see
@@ -295,6 +313,12 @@
     DEFINE_HOOK(void, DrawActorShadowPass_AddRenderPasses,
                 (void* self, void* renderer, void* renderingData,
                  void* method)) {
+#ifdef GAKU_VRIFY_HOSTED
+        if (!IsVrUnityRuntimeEnabled()) {
+            DrawActorShadowPass_AddRenderPasses_Orig(self, renderer, renderingData, method);
+            return;
+        }
+#endif
         PrepareActorShadowFeatureCall();
         RunWithActorShadowAnchor("actor-shadow-add", [&] {
 #ifdef GKMS_WINDOWS
@@ -331,12 +355,18 @@
 
     DEFINE_HOOK(void, CampusActorParameterPass_Execute,
                 (void* self, void* context, void* renderingData, void* method)) {
+#ifdef GAKU_VRIFY_HOSTED
+        if (!IsVrUnityRuntimeEnabled()) {
+            CampusActorParameterPass_Execute_Orig(self, context, renderingData, method);
+            return;
+        }
+#endif
 #ifdef GKMS_WINDOWS
         // `.179`: rebuild the official complete _OutlineParam for the
         // current camera from this pass's live settings + focal curve. The
         // stored per-role snapshot is what the eye/Grip material writes put
         // back, replacing the `.176`-condemned fixed-w synthetic vector.
-        if (Config::vrRuntimeStartupEnabled) {
+        if (IsVrUnityRuntimeEnabled()) {
             try {
                 unityStereoRenderer.CaptureOfficialOutlineVector(self);
             } catch (...) {
@@ -367,7 +397,7 @@
                 (void* self, void* context, void* camera, void* method)) {
         MobPenlight_UpdatePenlightParams_Orig(self, context, camera, method);
 #ifdef GKMS_WINDOWS
-        if (!Config::vrRuntimeStartupEnabled) {
+        if (!IsVrUnityRuntimeEnabled()) {
             return;
         }
         try {
@@ -384,7 +414,7 @@
         CrowdSystem_RenderCrowd_Orig(
             self, commandBuffer, eventType, method);
 #ifdef GKMS_WINDOWS
-        if (!Config::vrRuntimeStartupEnabled) {
+        if (!IsVrUnityRuntimeEnabled()) {
             return;
         }
         // The original crowd was already drawn. Omit only our extra hands
@@ -421,7 +451,7 @@
         // The live VL.Core.MaterialInfo constructor exposes the exact Material
         // selected for this Renderer slot. Prefer the instanced material when
         // present; the constructor stores it as the modifiable/rendered copy.
-        if (!Config::vrRuntimeStartupEnabled) {
+        if (!IsVrUnityRuntimeEnabled()) {
             return;
         }
         try {
@@ -435,6 +465,12 @@
 
     DEFINE_HOOK(void, VLDeferredPass_RenderActor,
                  (void* self, void* context, void* renderingData, void* method)) {
+#ifdef GAKU_VRIFY_HOSTED
+        if (!IsVrUnityRuntimeEnabled()) {
+            VLDeferredPass_RenderActor_Orig(self, context, renderingData, method);
+            return;
+        }
+#endif
 #ifdef GKMS_WINDOWS
         // RenderActor is the last proven managed boundary before actor GBuffer
         // draws. Its dump/live shape has no Renderer/Material argument, so use
@@ -475,6 +511,12 @@
 
     DEFINE_HOOK(void, VLActorParameterPass_Execute,
                 (void* self, void* context, void* renderingData, void* method)) {
+#ifdef GAKU_VRIFY_HOSTED
+        if (!IsVrUnityRuntimeEnabled()) {
+            VLActorParameterPass_Execute_Orig(self, context, renderingData, method);
+            return;
+        }
+#endif
         RunWithActorShadowAnchor("vl-actor-param", [&] {
             VLActorParameterPass_Execute_Orig(
                 self, context, renderingData, method);

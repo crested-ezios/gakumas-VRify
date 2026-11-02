@@ -1,5 +1,8 @@
 // VR-owned integration, included by the patched upstream Hook translation unit.
     bool AfterEndCamera(void* camera) {
+        #ifdef GAKU_VRIFY_HOSTED
+        if (!IsVrUnityRuntimeEnabled()) return false;
+        #endif
         bool ownedByVrQueue = false;
 #ifdef GKMS_WINDOWS
         try {

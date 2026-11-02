@@ -1,6 +1,8 @@
 #pragma once
 
+#ifndef GAKU_VRIFY_HOSTED
 #include <minhook.h>
+#endif
 #include <cstddef>
 
 namespace GakumasVR::Hooks {
@@ -12,7 +14,9 @@ namespace GakumasVR::Hooks {
     bool Initialize();
     bool IsInitialized();
 
+#ifndef GAKU_VRIFY_HOSTED
     MH_STATUS CreateAndEnableHook(void* target, void* detour, void** original);
+#endif
     bool CreateAndEnable(
         void* target,
         void* detour,

@@ -1,0 +1,59 @@
+--- a/src/platformDefine.hpp
++++ b/src/platformDefine.hpp
+@@ -1,5 +1,7 @@
+ #pragma once
++#ifndef GAKU_VRIFY_HOSTED
+ #include <minhook.h>
++#endif
+ #include <vector>
+ 
+ #define ANDROID_LOG_VERBOSE 0
+@@ -13,6 +15,17 @@
+ 
+ #define PLUGIN_VERSION "v3.5.0"
+ 
++#ifdef GAKU_VRIFY_HOSTED
++void GakuVrifyHostLog(int priority, const char* message) noexcept;
++#define GAKU_REPORT_HOOK_FAILURE(name, target, result) \
++    Log::ErrorFmt("ADD_HOOK: %s at %p failed: host-status=%lld", name, target, \
++        static_cast<long long>(reinterpret_cast<std::intptr_t>(result)))
++#else
++#define GAKU_REPORT_HOOK_FAILURE(name, target, result) \
++    Log::ErrorFmt("ADD_HOOK: %s at %p failed: %s", name, target, \
++        MH_StatusToString(static_cast<MH_STATUS>(reinterpret_cast<std::intptr_t>(result))))
++#endif
++
+ #define ADD_HOOK(name, addr)                                                                        \
+     do {                                                                                             \
+         name##_Addr = reinterpret_cast<name##_Type>(addr);                                          \
+@@ -23,13 +36,7 @@
+                 reinterpret_cast<void*>(name##_Hook),                                                \
+                 reinterpret_cast<void**>(&name##_Orig));                                             \
+             if (hookResult) {                                                                        \
+-                const auto hookStatus = static_cast<MH_STATUS>(                                      \
+-                    reinterpret_cast<std::intptr_t>(hookResult));                                    \
+-                Log::ErrorFmt(                                                                       \
+-                    "ADD_HOOK: %s at %p failed: %s",                                                \
+-                    #name,                                                                           \
+-                    hookTarget,                                                                      \
+-                    MH_StatusToString(hookStatus));                                                   \
++                GAKU_REPORT_HOOK_FAILURE(#name, hookTarget, hookResult);                       \
+             }                                                                                        \
+             else {                                                                                   \
+                 hookedStubs.emplace(hookTarget);                                                      \
+@@ -45,6 +52,9 @@
+ 
+ static void __android_log_write(int prio, const char* tag, const char* msg) {
+     if (prio < LogMinVersion) return;
++#ifdef GAKU_VRIFY_HOSTED
++    GakuVrifyHostLog(prio, msg);
++#else
+ 
+ 	static const char* logLevels[4] = { "VERBOSE", "DEBUG", "INFO", "ERROR" };
+ 
+@@ -55,4 +65,5 @@
+ 	// ponytail: 同步落盘，方便无控制台时排查 hook 是否装上
+ 	static FILE* logFile = fopen("gakumas-local/log.txt", "w");
+ 	if (logFile) { fprintf(logFile, "[%s] %s: %s\n", logLevels[prio], tag, msg); fflush(logFile); }
++#endif
+ }

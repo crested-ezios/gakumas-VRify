@@ -10,21 +10,26 @@
     }
 // VR-owned integration, included by the patched upstream Hook translation unit.
     bool ActorBonesReady(void* actor) {
+        if (actor == nullptr) return false;
         static auto* klass = Il2cppUtils::GetClass("campus-submodule.Runtime.dll", "Campus.Common", "CampusActorController");
+        if (klass == nullptr || klass->address == nullptr) return false;
         static auto* field = UnityResolve::Invoke<Il2cppUtils::FieldInfo*>("il2cpp_class_get_field_from_name", klass->address, "_humanBodyBoneMap");
         static bool fieldMissLogged = false;
         if (field == nullptr && !fieldMissLogged) {
             fieldMissLogged = true;
             if (AreVrUnityCameraDiagnosticsEnabled()) {
-                static_cast<void>(gakumas::vr::WriteVrLog("[VR][camera] FREECAM_BONES_FIELD_MISSING _humanBodyBoneMap not found; skipping readiness gate"));
+                static_cast<void>(gakumas::vr::WriteVrLog("[VR][camera] FREECAM_BONES_FIELD_MISSING _humanBodyBoneMap not found; skipping anchor sample"));
             }
         }
-        return !field || Il2cppUtils::ClassGetFieldValue<void*>(actor, field) != nullptr;
+        return field != nullptr && Il2cppUtils::ClassGetFieldValue<void*>(actor, field) != nullptr;
     }
     void SampleVrActor(void* actor) {
+        if (actor == nullptr) return;
         static auto* klass = Il2cppUtils::GetClass("campus-submodule.Runtime.dll", "Campus.Common", "CampusActorController");
+        if (klass == nullptr || klass->address == nullptr) return;
         static auto* indexMethod = Il2cppUtils::il2cpp_class_get_method_from_name(klass->address, "get_index", 0);
-        const int index = indexMethod ? reinterpret_cast<int (*)(void*)>(indexMethod->methodPointer)(actor) : 0;
+        if (indexMethod == nullptr || indexMethod->methodPointer == 0) return;
+        const int index = reinterpret_cast<int (*)(void*)>(indexMethod->methodPointer)(actor);
         gakumas::vr::NoteFollowCostumeActor(actor, index);
         const bool follow = gakumas::vr::camera::IsVrFreeCameraBoneAnchorWanted();
         const bool toon = Config::vrActorToonSourceAnchor && Config::vrToonFollowRef != Config::kVrToonFollowRefSource && gakumas::vr::camera::IsVrFreeCameraLocomotionActive();
@@ -38,6 +43,7 @@
         if (!follow && !toon) { restore(); return; }
         const bool bonesReady = ActorBonesReady(actor);
         static auto* parent = UnityResolve::Invoke<void*>("il2cpp_class_get_parent", klass->address);
+        if (parent == nullptr) return;
         static auto* boneMethod = Il2cppUtils::il2cpp_class_get_method_from_name(parent, "GetHumanBodyBoneTransform", 1);
         auto bone = boneMethod ? reinterpret_cast<UnityResolve::UnityType::Transform* (*)(void*, int)>(boneMethod->methodPointer) : nullptr;
         if (toon && bonesReady && bone) {
@@ -66,17 +72,20 @@
         gakumas::vr::camera::PublishVrFollowActorController(actor);
         vrCameraAnchorTimeNanoseconds = gakumas::vr::pose::MonotonicNowNanoseconds();
         static auto* rootField = klass->Get<UnityResolve::Field>("_rootBody");
+        if (rootField == nullptr) return;
         auto* body = Il2cppUtils::ClassGetFieldValue<UnityResolve::UnityType::Transform*>(actor, rootField);
         if (!body) return;
         auto* model = body->GetParent();
         if (!model) return;
         for (int child = 0; child < model->GetChildCount(); ++child) {
             auto* part = model->GetChild(child);
+            if (part == nullptr) continue;
             const auto name = part->GetName();
             if (name == "Root_Hair") { ApplyHeadVisibility(part->GetGameObject(), false); needRestoreHides = true; }
             if (name != "Root_Face") continue;
             for (int mesh = 0; mesh < part->GetChildCount(); ++mesh) {
                 auto* renderer = part->GetChild(mesh);
+                if (renderer == nullptr) continue;
                 if (renderer->GetName() == "VLSkinningRenderer") { ApplyHeadVisibility(renderer->GetGameObject(), true); needRestoreHides = true; }
             }
         }

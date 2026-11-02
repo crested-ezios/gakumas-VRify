@@ -2,32 +2,42 @@
 
 # gakumas-VRify
 
-為《學園偶像大師》（学園アイドルマスター）加入 VR 支援的非官方 Mod，**僅適用於 DMM 版本**。本專案基於上游 [gkms-localify-dmm](https://git.chinosk6.cn/chinosk/gkms-localify-dmm) 開發。
+為《學園偶像大師》（学園アイドルマスター）加入 VR 支援的非官方 Mod，**適用於 Windows x64 DMM 版**，基於 [gkms-localify-dmm](https://git.chinosk6.cn/chinosk/gkms-localify-dmm)。
+
+此分支包含目前的 **GakuLoader 外掛整合版 `GakuVRify.dll`**，已實作 Localify camera/render 與 Motion begin-camera 共用橋接。原始碼預設建置 Plugin；原獨立代理版保留為明確選項。
+
+[原始碼建置](BUILDING.md) · [外掛安裝與介面](docs/GAKULOADER_PLUGIN.md) · [鏡頭相容範圍](docs/MOTION_CAMERA_COEXIST_20261027.md) · [原始碼歸屬](UPSTREAM.md)
 
 ## 使用前請閱讀
 
-- 遊戲本身並非為 VR 設計，使用時可能出現角色缺失、位置錯誤、畫面閃爍等情況。
-- **請注意暈眩與閃爍風險。如感到不適，請立即停止使用。**
-- 本專案僅進行本機修改，但仍屬於對遊戲的修改。使用前請自行查閱包含但不限於[使用者條款（日文）](https://legal.bandainamcoent.co.jp/terms/nejp)的相關規定，再決定是否使用，並**對自己的帳號及使用後果負責**。
-- 本專案僅為 Fan-made Project（粉絲自製專案），與上游專案及遊戲相關方均無利益關係，也不代表其立場。
+- 遊戲本身並非為 VR 設計，可能出現角色缺失、位置錯誤及畫面閃爍。
+- **請注意暈眩與閃爍風險。如感到不適，請停止使用。**
+- 使用本機遊戲修改前，請查閱包含[使用者條款（日文）](https://legal.bandainamcoent.co.jp/terms/nejp)在內的相關規則，並對自己的帳號與使用後果負責。
+- 本專案為粉絲自製，與上游專案及遊戲相關方沒有隸屬或背書關係。
 
-## 安裝與執行
+## 使用外掛整合版
 
-1. 準備 Windows x64 的 DMM 版遊戲。
-2. 從 [Releases](https://github.com/KagaminTheMirror/gakumas-VRify/releases) 下載最新發布套件。
-3. 關閉遊戲，將發布套件解壓縮至 `gakumas.exe` 所在的遊戲目錄。升級時同樣將新版套件解壓縮至該目錄並覆寫即可。
-4. 將頭戴裝置連接到電腦，再啟動遊戲。
+請使用配套的 GakuLoader 與外掛套件。自行編譯請參閱[建置指南](BUILDING.md)；公開 Loader SDK 標頭已隨倉庫提供，編譯外掛不需要私有 Loader 實作。
 
-專案目前僅在 Quest 3 + Virtual Desktop 下完成測試，無法保證其他裝置的使用體驗。
+安裝前關閉遊戲。外掛套件將 `GakuVRify.dll` 放入 `gakumas-local/plugins/`，OpenXR loader 放在遊戲執行檔旁，VR 設定位於 `gakumas-vr/`。GakuLoader 另行安裝。套件清單、設定保留與還原方式見[外掛指南](docs/GAKULOADER_PLUGIN.md)。
+
+通用安裝程式無法驗證外部 Localify/Motion provider 是否配套，因此仍保守拒絕完整 Unity VR 混裝。共用橋接已實作；該安裝程式不負責自動升級並驗證整組元件。
+
+[上游 Releases](https://github.com/KagaminTheMirror/gakumas-VRify/releases) 提供的是**獨立代理版**，屬於另一條安裝流程，不能據此認定包含此分支的外掛整合。請勿在同一安裝中混用獨立代理與 GakuLoader 代理。
+
+## 相容性與已知限制
+
+- 歷史頭戴裝置測試涵蓋 Quest 3 + Virtual Desktop，不代表其他裝置或所有場景已驗收。
+- 一組配套建置曾確認頭戴裝置畫面正常，並完成一次 Motion 動作播放，範圍見[相機共用報告](docs/CAMERA_COEXIST_20261027.md)。
+- **已知問題：**沒有 VR 時的 Motion 手動鏡頭移動、旋轉已確認；啟用 VR 後，Motion 鏡頭控制仍會失效。begin-camera 共用橋接尚未解決剩餘的排程問題，詳見[鏡頭共存紀錄](docs/MOTION_CAMERA_COEXIST_20261027.md)。
+- 原始碼建置、合成檢查、磁碟檔案校驗與遊戲／頭戴裝置驗收分別記錄。歷史報告不自動認證新編譯的 DLL；不支援熱卸載。
 
 ## Quest 控制器操作指南
 
 ![Quest 控制器操作指南（繁體中文）](docs/controller-guide/exports/gakumas-vrify-quest-guide-zh-TW.png)
 
-## 編譯與貢獻
+## 開發與授權
 
-從原始碼編譯請參閱 [BUILDING.md](BUILDING.md)。原始碼歸屬與上游更新方式請見 [UPSTREAM.md](UPSTREAM.md)。
+公開檢查使用合成測試資料與 mock host。選用的正式宿主、Localify、Motion 原始碼整合測試需要另行提供對應原始碼，見[建置指南](BUILDING.md)。
 
-## 授權與致謝
-
-專案採用 [GPL-3.0](LICENSE) 授權。第三方元件保留各自授權，詳見 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。本儲存庫不包含遊戲資源或遊戲安裝檔案。
+專案採用 [GPL-3.0](LICENSE)。隨附 Loader SDK 保留 [MIT 授權](sdk/gakuloader/LICENSE)；其他元件及控制器插圖保留各自條款，見[第三方通知](THIRD_PARTY_NOTICES.md)。倉庫不包含遊戲資源或遊戲安裝檔案。

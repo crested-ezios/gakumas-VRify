@@ -1,0 +1,35 @@
+--- a/src/GakumasLocalify/Hook.cpp
++++ b/src/GakumasLocalify/Hook.cpp
+@@ -2790,14 +2790,17 @@
+             Log::Info(
+                 "VR_CAMERA_OWNERSHIP owner=vr localifyFreeCamera=suppressed");
+         }
++#ifndef GAKU_VRIFY_HOSTED
+         if (Config::enabled) {
+             GakumasLocal::WinHooks::Keyboard::InstallWndProcHook();
+         }
++#endif
+ #else
+         UnityResolve::Init(xdl_open(hookInstaller->m_il2cppLibraryPath.c_str(), RTLD_NOW),
+             UnityResolve::Mode::Il2Cpp, Config::lazyInit);
+ #endif
+ 
++#ifndef GAKU_VRIFY_HOSTED
+         if (Config::enabled) {
+         // Extra font/texture bundle is armed on demand from
+         // EnsureExtraAssetBundle when vrLocalizeText is on. Do not
+@@ -3280,6 +3283,8 @@
+         }
+ #endif
+ 
++#endif // !GAKU_VRIFY_HOSTED
++
+         RegisterUnityExtensions(hookInstaller);
+ 
+     }
+@@ -3360,3 +3365,5 @@
+         Log::Info("Hook installed");
+     }
+ }
++
++#include "vr/unity/HostedUnity.inc.cpp"

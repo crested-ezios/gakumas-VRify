@@ -311,6 +311,9 @@ bool VrRuntime::Start(VrRuntimeConfig config, HookRegistrar registrar) {
     sessionRunningSnapshot_.store(false, std::memory_order_release);
     sessionEventSnapshot_.store(openxr::OpenXrContext::EventResult::Healthy);
     lastOpenXrResult_.store(XR_SUCCESS, std::memory_order_release);
+    unavailableReason_.store(VrUnavailableReason::None);
+    graphicsHooksSnapshot_.store(false);
+    backendAttempts_.store(0);
     d3d11HooksReady_ = false;
     activePointerHand_ = 1;
     draggingPointerHand_ = 2;
@@ -430,6 +433,7 @@ void VrRuntime::Stop() noexcept {
     }
     DropPendingStereoGpuPublish();
     d3d11Capture_.Detach();
+    graphicsHooksSnapshot_.store(false);
     ReleasePointerDrag();
     ResetThumbstickScroll("runtime-stop");
     {
@@ -923,7 +927,8 @@ void VrRuntime::WorkerMain() noexcept {
         openXr_.Reset();
     }
     d3d11Capture_.Detach();
-    if (State() != VrRuntimeState::Faulted && State() != VrRuntimeState::Disabled) {
+    if (State() != VrRuntimeState::Faulted && State() != VrRuntimeState::Disabled &&
+        State() != VrRuntimeState::Unavailable) {
         state_.store(VrRuntimeState::Stopped, std::memory_order_release);
         log_.Write("[VR][runtime] state=Stopped");
     }
@@ -952,24 +957,31 @@ void VrRuntime::WorkerMainImpl() {
         SetState(VrRuntimeState::WaitingForRuntime);
         std::unique_lock xrStartupLock(xrLifecycleMutex_);
         sessionPublished_.store(false, std::memory_order_release);
+        backendAttempts_.fetch_add(1);
         const auto initializeResult = openXr_.Initialize(config_.applicationDirectory, log_);
         lastOpenXrResult_.store(openXr_.LastResult(), std::memory_order_release);
         if (initializeResult == openxr::OpenXrContext::InitializeResult::RetryRuntime) {
+            if (openXr_.LastResult() == XR_ERROR_RUNTIME_UNAVAILABLE)
+                Unavailable(VrUnavailableReason::RuntimeMissing);
+            // Other transient initialization failures retain the existing retry
+            // policy and are not mislabeled as a missing runtime/device.
+            else log_.Write("[VR][runtime] backend initialization failed; retrying");
             WaitOrStop(config_.runtimeRetryInterval);
             continue;
         }
         if (initializeResult == openxr::OpenXrContext::InitializeResult::LoaderMissing) {
-            Fault("app-local openxr_loader.dll is required");
+            Unavailable(VrUnavailableReason::LoaderMissing);
             break;
         }
         if (initializeResult == openxr::OpenXrContext::InitializeResult::ExtensionMissing) {
-            Fault("active runtime does not expose XR_KHR_D3D11_enable");
+            Unavailable(VrUnavailableReason::D3D11ExtensionMissing);
             break;
         }
         if (initializeResult != openxr::OpenXrContext::InitializeResult::Ready) {
             Fault("OpenXR instance initialization failed");
             break;
         }
+        unavailableReason_.store(VrUnavailableReason::None);
         SetState(VrRuntimeState::InstanceReady);
 
         bool systemReady = false;
@@ -986,7 +998,8 @@ void VrRuntime::WorkerMainImpl() {
                 break;
             }
 
-            SetState(VrRuntimeState::WaitingForRuntime);
+            Unavailable(openXr_.LastResult() == XR_ERROR_RUNTIME_UNAVAILABLE ?
+                VrUnavailableReason::RuntimeMissing : VrUnavailableReason::HeadsetMissing);
             if (!headsetWaitWasLogged) {
                 log_.Write("[VR][runtime] HMD unavailable; connect Virtual Desktop/headset and retrying");
                 WriteVrConsole("OpenXR HMD unavailable; connect headset and retry");
@@ -1000,6 +1013,7 @@ void VrRuntime::WorkerMainImpl() {
             break;
         }
         headsetWaitWasLogged = false;
+        unavailableReason_.store(VrUnavailableReason::None);
         SetState(VrRuntimeState::SystemReady);
 
         openxr::OpenXrContext::D3D11Requirements requirements;
@@ -1886,10 +1900,12 @@ bool VrRuntime::EnsureD3D11Hooks() {
     switch (result) {
     case d3d11::D3D11Capture::HookInstallResult::Installed:
         d3d11HooksReady_ = true;
+        graphicsHooksSnapshot_.store(true);
         log_.Write("[VR][runtime] D3D11 Present capture hooks installed");
         return true;
     case d3d11::D3D11Capture::HookInstallResult::AlreadyInstalled:
         d3d11HooksReady_ = true;
+        graphicsHooksSnapshot_.store(true);
         return true;
     case d3d11::D3D11Capture::HookInstallResult::D3D11NotLoaded:
         SetState(VrRuntimeState::WaitingForGraphics);
@@ -1921,12 +1937,26 @@ void VrRuntime::SetState(VrRuntimeState state) {
 }
 
 void VrRuntime::Fault(std::string_view reason) {
+    unavailableReason_.store(VrUnavailableReason::None);
     confirmedMirrorLayout_.store(0, std::memory_order_release);
     poseMailbox_.Invalidate();
     stereoRenderMailbox_.Invalidate();
     state_.store(VrRuntimeState::Faulted, std::memory_order_release);
     log_.Write(std::string("[VR][runtime] FAULT: ") + std::string(reason));
-    WriteVrConsole(std::string("OpenXR fault: ") + std::string(reason));
+    const auto message = std::string("OpenXR fault: ") + std::string(reason);
+    WriteVrConsole(message);
+    if (config_.statusSink) config_.statusSink(true, message.c_str());
+}
+
+void VrRuntime::Unavailable(VrUnavailableReason reason) {
+    const auto previous = unavailableReason_.exchange(reason);
+    const auto state = state_.exchange(VrRuntimeState::Unavailable, std::memory_order_acq_rel);
+    if (previous != reason || state != VrRuntimeState::Unavailable) {
+        const auto message = std::string("VR unavailable: ") + VrUnavailableReasonName(reason);
+        log_.Write(std::string("[VR][runtime] ") + message);
+        WriteVrConsole(message);
+        if (config_.statusSink) config_.statusSink(false, message.c_str());
+    }
 }
 
 std::filesystem::path VrRuntime::ResolveApplicationDirectory() {
@@ -2039,8 +2069,21 @@ const char* VrRuntimeStateName(VrRuntimeState state) noexcept {
         return "Faulted";
     case VrRuntimeState::Stopped:
         return "Stopped";
+    case VrRuntimeState::Unavailable:
+        return "Unavailable";
     default:
         return "Unknown";
+    }
+}
+
+const char* VrUnavailableReasonName(VrUnavailableReason reason) noexcept {
+    switch (reason) {
+    case VrUnavailableReason::None: return "none";
+    case VrUnavailableReason::LoaderMissing: return "loader-missing";
+    case VrUnavailableReason::RuntimeMissing: return "runtime-missing";
+    case VrUnavailableReason::HeadsetMissing: return "headset-missing";
+    case VrUnavailableReason::D3D11ExtensionMissing: return "d3d11-extension-missing";
+    default: return "unknown";
     }
 }
 

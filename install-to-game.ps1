@@ -1,5 +1,9 @@
+#Requires -Version 7.0
 [CmdletBinding()]
 param(
+    [ValidateSet('Plugin', 'Standalone')]
+    [string]$Mode = 'Plugin',
+    [string]$LoaderSdkDirectory = '',
     [ValidateSet('Debug', 'Release')]
     [string]$Configuration = 'Release',
 
@@ -13,6 +17,13 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+
+if ($Mode -eq 'Plugin') {
+    & (Join-Path $PSScriptRoot 'install-plugin.ps1') -GameRoot $GameRoot `
+        -Configuration $Configuration -SkipPackage:$SkipPackage -Probe:$Probe `
+        -LoaderSdkDirectory $LoaderSdkDirectory
+    return
+}
 
 # Repo root != game root. Never copy the game into this repository.
 # Install only the Localify/VR whitelist beside gakumas.exe:

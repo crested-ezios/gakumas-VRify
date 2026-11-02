@@ -1,0 +1,313 @@
+{
+  "schema": "vrify.public-validation-summary/1",
+  "test": "GakuVRify VR-less smoke",
+  "date": "2026-10-26",
+  "status": "PASS",
+  "scope": "Historical production-host integration with synthetic Unity/OpenXR fixtures; not a new build or headset acceptance.",
+  "summary_note": "Machine-local paths, process/module inventories and repeated raw logs are omitted. Technical results and input identities are retained. Raw local test directories are not bundled.",
+  "rawReportSha256": "0e8ffc2f0670546c27c33393193c0af83d8eb213468991df0470c7eed7b8d55e",
+  "pluginSha256": "f4b8d9b77984a74a780af335575a7d469580cf5698054680d7da006985ff1e14",
+  "sourceInputs": "e25d572cdcbd311c8060cec4967d220fc3de1816b5594fe9234df51d38d216ac",
+  "loaderSdk": "76987362c4885ba73d35e11a4c99486809bc9aa0550059f74aceca1c12d7c801",
+  "host": "production GakuLoader core without test-seam macro; desktop UI/dialog shell stubbed",
+  "hostSourceHashes": {
+    "src/PluginHost.cpp": "76d192f8ad06ed3459bdf92199a2ed576e1ac1d610d4906b08cb8b154d50ed25",
+    "src/ActorEntry.cpp": "1f8d98d83be6c337b03048afd7bf8cb0af7cb318e8465fa6067b71deb2f3800e",
+    "src/Hotkeys.cpp": "8ad8fc3266237134718ddfb765fbff608abebd40b31839f73902a195a6781832",
+    "src/Trace.cpp": "6c92d80245494266a16f3b2556aff09a8f158406fd6bf086f182b5872057a3a5",
+    "src/CrashTrace.cpp": "20d44120784a858787151d0a63d33364c6dc3f6b5aa378cf6ca64765c6c87101",
+    "deps/minhook/src/buffer.c": "0ab484d7870c3a8e7a3a1ee61e2070072cf445ed85b619d4c4207fed34356d99",
+    "deps/minhook/src/hook.c": "15ae88fe6f477137944de697956491ba6a35f6328c5525536be4bf60b0221671",
+    "deps/minhook/src/trampoline.c": "5ae2543b8147a0b19f678aae91cb4eff9482f8dd3b02a4e034d9b0e42dce604e",
+    "deps/minhook/src/hde/hde64.c": "94178f7cf3685c96e0ac2cf069c876b0ea9c047a39c4b5251b762b69e99b824c"
+  },
+  "metadataFixtureSha256": "c62d0284149f7844fe3d6850f2e0287b7f66b6545dea8ad9cdb1ff9efbb0bb88",
+  "backendFixtureSha256": "64193e8d400cbcdf5db225205ed3d9a3ff9d0cbe11da1a77f016ea4390432951",
+  "realOpenXrLoaderSha256": "0c262c9384be6bc82634e03a324e2344cdff41a4140fa8935891666184e8c596",
+  "limits": [
+    "IL2CPP metadata is a fixture, not real Unity/game execution",
+    "OpenXR test backend never supplies a system/session/pose",
+    "The host window/frame-pump bootstrap and headset visuals are not tested"
+  ],
+  "result_summary": {
+    "passed": 10,
+    "failed": 0,
+    "timedOut": 0,
+    "managed_or_object_invocations": 0,
+    "fake_session_or_pose_calls": 0,
+    "slowest_shutdown_ms": 563,
+    "shutdown_assertion_ms": 4000
+  },
+  "scenarios": [
+    {
+      "scenario": "native-loader-missing",
+      "status": "PASS",
+      "exitCode": 0,
+      "timedOut": false,
+      "unavailableInHostLog": true,
+      "before": {
+        "runtimeName": "Unavailable",
+        "reasonName": "loader-missing",
+        "lastOpenXrResult": 0,
+        "unityInitialized": 0,
+        "actorBindings": 0,
+        "graphicsHooksReady": 1,
+        "backendAttempts": 1,
+        "initializationStatus": 0
+      },
+      "after": {
+        "runtimeName": "Stopped",
+        "unityInitialized": 0,
+        "actorBindings": 0,
+        "graphicsHooksReady": 0
+      },
+      "criticalTargetsPatched": 0,
+      "criticalTargetsRestored": 0,
+      "actorParticipantsBeforeShutdown": 0,
+      "actorParticipantsAfterShutdown": 0
+    },
+    {
+      "scenario": "native-runtime-missing",
+      "status": "PASS",
+      "exitCode": 0,
+      "timedOut": false,
+      "unavailableInHostLog": true,
+      "before": {
+        "runtimeName": "Unavailable",
+        "reasonName": "runtime-missing",
+        "lastOpenXrResult": -51,
+        "unityInitialized": 0,
+        "actorBindings": 0,
+        "graphicsHooksReady": 1,
+        "backendAttempts": 1,
+        "initializationStatus": 0
+      },
+      "after": {
+        "runtimeName": "Stopped",
+        "unityInitialized": 0,
+        "actorBindings": 0,
+        "graphicsHooksReady": 0
+      },
+      "criticalTargetsPatched": 0,
+      "criticalTargetsRestored": 0,
+      "actorParticipantsBeforeShutdown": 0,
+      "actorParticipantsAfterShutdown": 0
+    },
+    {
+      "scenario": "native-device-missing",
+      "status": "PASS",
+      "exitCode": 0,
+      "timedOut": false,
+      "unavailableInHostLog": true,
+      "before": {
+        "runtimeName": "Unavailable",
+        "reasonName": "headset-missing",
+        "lastOpenXrResult": -35,
+        "unityInitialized": 0,
+        "actorBindings": 0,
+        "graphicsHooksReady": 1,
+        "backendAttempts": 1,
+        "initializationStatus": 0
+      },
+      "after": {
+        "runtimeName": "Stopped",
+        "unityInitialized": 0,
+        "actorBindings": 0,
+        "graphicsHooksReady": 0
+      },
+      "criticalTargetsPatched": 0,
+      "criticalTargetsRestored": 0,
+      "actorParticipantsBeforeShutdown": 0,
+      "actorParticipantsAfterShutdown": 0
+    },
+    {
+      "scenario": "unity-loader-missing",
+      "status": "PASS",
+      "exitCode": 0,
+      "timedOut": false,
+      "unavailableInHostLog": true,
+      "before": {
+        "runtimeName": "Unavailable",
+        "reasonName": "loader-missing",
+        "lastOpenXrResult": 0,
+        "unityInitialized": 1,
+        "actorBindings": 2,
+        "graphicsHooksReady": 1,
+        "backendAttempts": 1,
+        "initializationStatus": 0
+      },
+      "after": {
+        "runtimeName": "Stopped",
+        "unityInitialized": 0,
+        "actorBindings": 0,
+        "graphicsHooksReady": 0
+      },
+      "criticalTargetsPatched": 4,
+      "criticalTargetsRestored": 4,
+      "actorParticipantsBeforeShutdown": 2,
+      "actorParticipantsAfterShutdown": 0
+    },
+    {
+      "scenario": "unity-runtime-missing",
+      "status": "PASS",
+      "exitCode": 0,
+      "timedOut": false,
+      "unavailableInHostLog": true,
+      "before": {
+        "runtimeName": "Unavailable",
+        "reasonName": "runtime-missing",
+        "lastOpenXrResult": -51,
+        "unityInitialized": 1,
+        "actorBindings": 2,
+        "graphicsHooksReady": 1,
+        "backendAttempts": 1,
+        "initializationStatus": 0
+      },
+      "after": {
+        "runtimeName": "Stopped",
+        "unityInitialized": 0,
+        "actorBindings": 0,
+        "graphicsHooksReady": 0
+      },
+      "criticalTargetsPatched": 4,
+      "criticalTargetsRestored": 4,
+      "actorParticipantsBeforeShutdown": 2,
+      "actorParticipantsAfterShutdown": 0
+    },
+    {
+      "scenario": "unity-device-missing",
+      "status": "PASS",
+      "exitCode": 0,
+      "timedOut": false,
+      "unavailableInHostLog": true,
+      "before": {
+        "runtimeName": "Unavailable",
+        "reasonName": "headset-missing",
+        "lastOpenXrResult": -35,
+        "unityInitialized": 1,
+        "actorBindings": 2,
+        "graphicsHooksReady": 1,
+        "backendAttempts": 1,
+        "initializationStatus": 0
+      },
+      "after": {
+        "runtimeName": "Stopped",
+        "unityInitialized": 0,
+        "actorBindings": 0,
+        "graphicsHooksReady": 0
+      },
+      "criticalTargetsPatched": 4,
+      "criticalTargetsRestored": 4,
+      "actorParticipantsBeforeShutdown": 2,
+      "actorParticipantsAfterShutdown": 0
+    },
+    {
+      "scenario": "native-real-runtime-missing",
+      "status": "PASS",
+      "exitCode": 0,
+      "timedOut": false,
+      "unavailableInHostLog": true,
+      "before": {
+        "runtimeName": "Unavailable",
+        "reasonName": "runtime-missing",
+        "lastOpenXrResult": -51,
+        "unityInitialized": 0,
+        "actorBindings": 0,
+        "graphicsHooksReady": 1,
+        "backendAttempts": 1,
+        "initializationStatus": 0
+      },
+      "after": {
+        "runtimeName": "Stopped",
+        "unityInitialized": 0,
+        "actorBindings": 0,
+        "graphicsHooksReady": 0
+      },
+      "criticalTargetsPatched": 0,
+      "criticalTargetsRestored": 0,
+      "actorParticipantsBeforeShutdown": 0,
+      "actorParticipantsAfterShutdown": 0
+    },
+    {
+      "scenario": "unity-real-runtime-missing",
+      "status": "PASS",
+      "exitCode": 0,
+      "timedOut": false,
+      "unavailableInHostLog": true,
+      "before": {
+        "runtimeName": "Unavailable",
+        "reasonName": "runtime-missing",
+        "lastOpenXrResult": -51,
+        "unityInitialized": 1,
+        "actorBindings": 2,
+        "graphicsHooksReady": 1,
+        "backendAttempts": 1,
+        "initializationStatus": 0
+      },
+      "after": {
+        "runtimeName": "Stopped",
+        "unityInitialized": 0,
+        "actorBindings": 0,
+        "graphicsHooksReady": 0
+      },
+      "criticalTargetsPatched": 4,
+      "criticalTargetsRestored": 4,
+      "actorParticipantsBeforeShutdown": 2,
+      "actorParticipantsAfterShutdown": 0
+    },
+    {
+      "scenario": "native-invalid-loader",
+      "status": "PASS",
+      "exitCode": 0,
+      "timedOut": false,
+      "unavailableInHostLog": false,
+      "before": {
+        "runtimeName": "Faulted",
+        "reasonName": "none",
+        "lastOpenXrResult": 0,
+        "unityInitialized": 0,
+        "actorBindings": 0,
+        "graphicsHooksReady": 1,
+        "backendAttempts": 1,
+        "initializationStatus": 0
+      },
+      "after": {
+        "runtimeName": "Stopped",
+        "unityInitialized": 0,
+        "actorBindings": 0,
+        "graphicsHooksReady": 0
+      },
+      "criticalTargetsPatched": 0,
+      "criticalTargetsRestored": 0,
+      "actorParticipantsBeforeShutdown": 0,
+      "actorParticipantsAfterShutdown": 0
+    },
+    {
+      "scenario": "unity-metadata-missing",
+      "status": "PASS",
+      "exitCode": 0,
+      "timedOut": false,
+      "unavailableInHostLog": false,
+      "before": {
+        "runtimeName": "Disabled",
+        "reasonName": "none",
+        "lastOpenXrResult": 0,
+        "unityInitialized": 0,
+        "actorBindings": 0,
+        "graphicsHooksReady": 0,
+        "backendAttempts": 0,
+        "initializationStatus": -4
+      },
+      "after": {
+        "runtimeName": "Disabled",
+        "unityInitialized": 0,
+        "actorBindings": 0,
+        "graphicsHooksReady": 0
+      },
+      "criticalTargetsPatched": 0,
+      "criticalTargetsRestored": 4,
+      "actorParticipantsBeforeShutdown": 0,
+      "actorParticipantsAfterShutdown": 0
+    }
+  ]
+}

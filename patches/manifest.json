@@ -200,6 +200,63 @@
             "inputBlobs": {
                 "src/gkmsGUI/GUII18n.cpp": "4409227010a242bbd93d26b6577cd9952fe13bfd"
             }
+        },
+        {
+            "file": "seams/hosted-platform.patch",
+            "purpose": "Hosted hook diagnostics and logging use GakuLoader without MinHook or shared Localify log ownership",
+            "checks": [
+                "test-hosted-plugin"
+            ],
+            "before": {
+                "src/platformDefine.hpp": "41047b9a642f4465572ee1bd1fb55de09c368b89b276df26d5b12746866cb03c"
+            },
+            "after": {
+                "src/platformDefine.hpp": "19d8d4dc9d884fde8b8d95b0510459a10f9cce37edc206a7f62f2a3496ba1e9c"
+            },
+            "sha256": "99751988fbf6f9536d0560c9974df4cb25db495013a5749f62d77bf3e5911155",
+            "inputBlobs": {
+                "src/platformDefine.hpp": "9bd0b877af1fa1e854ee38aed0b5979a4bc97f67"
+            }
+        },
+        {
+            "file": "seams/hosted-unity.patch",
+            "purpose": "Hosted VR-only Unity initialization without Localify registration, old window subclass or nested host",
+            "checks": [
+                "test-hosted-plugin"
+            ],
+            "before": {
+                "src/GakumasLocalify/Hook.cpp": "ceed114e82e316512ae8739ac41f302bba3861cd00a39f5058029190fefd7f37"
+            },
+            "after": {
+                "src/GakumasLocalify/Hook.cpp": "196610169e855ae80bf06e1fc24b96808642bda039ad0f6701ce935c0e788a80"
+            },
+            "sha256": "440ac68fe9c7a0e8031f42cc7927e1adb073a02e442664c16314c754f5659f8c",
+            "inputBlobs": {
+                "src/GakumasLocalify/Hook.cpp": "bdf03ea66d888cbee9a49e8195057340b6e5d2f1"
+            }
+        },
+        {
+            "file": "compat/hosted-build-support.patch",
+            "purpose": "Compile retained VR support on current MSVC without HTTP implementation or implicit Windows macros",
+            "checks": [
+                "test-hosted-plugin"
+            ],
+            "before": {
+                "src/GakumasLocalify/Hook.cpp": "196610169e855ae80bf06e1fc24b96808642bda039ad0f6701ce935c0e788a80",
+                "src/GakumasLocalify/Misc.cpp": "036662e13bc9118215e5dbe14705aa6f55000c19d85ebe13404a77541dcbc859",
+                "src/GakumasLocalify/Local.cpp": "69ce6bf549af8fcd955ffee2f83ffc1d50fac59962a87c42f7f2959b61c6e0f1"
+            },
+            "after": {
+                "src/GakumasLocalify/Hook.cpp": "d252006bc51eaf2d846cb25c474c0171542c21af36739ee8559e5416c603fc95",
+                "src/GakumasLocalify/Misc.cpp": "de9c656ac2b6663398f62109ca81e8a383f8185a4acf8e2bbbe03ce3d4ab28f1",
+                "src/GakumasLocalify/Local.cpp": "ae9da4aa5c8ed8b659226abe637a1a37480336a9852c27d3a4a5fb4b3ec89666"
+            },
+            "inputBlobs": {
+                "src/GakumasLocalify/Hook.cpp": "95ddb50f53a07f41739f0f02abea7fc59dc419fa",
+                "src/GakumasLocalify/Misc.cpp": "0f63390ea39bfaed6e0b4707b3833761feec0ae8",
+                "src/GakumasLocalify/Local.cpp": "ec63c19ae2d2df1ebced68cc9d5a78c79daa046e"
+            },
+            "sha256": "ee9830e2350490bfe6f00b1411d14c2bddc8c31a7725a1aa743fcff3a6949624"
         }
     ]
 }

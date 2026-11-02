@@ -172,10 +172,16 @@
     int proFlareRenderLogs[3]{};
 
     bool IsVrUnityRuntimeEnabled() noexcept {
+#ifdef GAKU_VRIFY_HOSTED
+        if (!GakumasVR::Hosted::IsUnityAccepting()) return false;
+#endif
         return Config::vrRuntimeStartupEnabled && !Config::vrNativeOnly;
     }
 
     bool AreVrUnityCameraDiagnosticsEnabled() noexcept {
+#ifdef GAKU_VRIFY_HOSTED
+        if (!GakumasVR::Hosted::IsUnityAccepting()) return false;
+#endif
         return Config::vrDiagnosticsStartupEnabled && !Config::vrNativeOnly;
     }
 

@@ -1,5 +1,8 @@
 // VR-owned integration, included by the patched upstream Hook translation unit.
     void BeforeCameraState(void* self, void* state) {
+        #ifdef GAKU_VRIFY_HOSTED
+        if (!IsVrUnityRuntimeEnabled()) return;
+        #endif
         PendingCinemachineObservation cameraObservation{};
         try {
             cameraObservation = CaptureCinemachinePose(self, state);
@@ -9,6 +12,9 @@
         }
     }
     void AfterCameraState(void* self) {
+        #ifdef GAKU_VRIFY_HOSTED
+        if (!IsVrUnityRuntimeEnabled()) return;
+        #endif
         try {
             while (gakumas::vr::ConsumeLivePauseToggle()) {
                 gakumas::vr::ToggleLivePause();

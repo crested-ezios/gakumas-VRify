@@ -9,9 +9,11 @@
             // The VR free camera samples FOLLOW/FIRST_PERSON bone anchors in
             // this hook, so it must install even when the translation layer
             // (Config::enabled) is off — the VR package ships enabled=false.
+            #ifndef GAKU_VRIFY_HOSTED
             ADD_HOOK(CampusActorController_LateUpdate,
                      Il2cppUtils::GetMethodPointer("campus-submodule.Runtime.dll", "Campus.Common",
                                                    "CampusActorController", "LateUpdate"));
+            #endif
 
             // Grip transparency Execute-branch fixup (.225); live class
             // proven in campus-submodule.Runtime.dll by the .224 run.
@@ -40,8 +42,14 @@
                 static_cast<void>(gakumas::vr::WriteVrLog(binding.str()));
             }
 #endif
-            ADD_HOOK(Camera_get_main,
-                     cameraMainShape ? cameraMainMethod->function : nullptr);
+            #ifdef GAKU_VRIFY_HOSTED
+            if (!GakumasVR::Hosted::UseSharedCameraTarget(GAKULOCALIFY_CAMERA_RENDER_MAIN,
+                cameraMainShape ? cameraMainMethod->function : nullptr))
+            #endif
+            {
+                ADD_HOOK(Camera_get_main,
+                         cameraMainShape ? cameraMainMethod->function : nullptr);
+            }
 
             const auto* cinemachineMethod = Il2cppUtils::GetMethod(
                 "Cinemachine.dll", "Cinemachine", "CinemachineBrain",
@@ -53,8 +61,14 @@
                 cinemachineMethod->args.front()->pType != nullptr &&
                 cinemachineMethod->args.front()->pType->name.find("CameraState") !=
                     std::string::npos;
-            ADD_HOOK(CinemachineBrain_PushStateToUnityCamera,
-                     cinemachineShape ? cinemachineMethod->function : nullptr);
+            #ifdef GAKU_VRIFY_HOSTED
+            if (!GakumasVR::Hosted::UseSharedCameraTarget(GAKULOCALIFY_CAMERA_RENDER_PUSH,
+                cinemachineShape ? cinemachineMethod->function : nullptr))
+            #endif
+            {
+                ADD_HOOK(CinemachineBrain_PushStateToUnityCamera,
+                         cinemachineShape ? cinemachineMethod->function : nullptr);
+            }
 
 #ifdef GKMS_WINDOWS
             if (vrRuntime) {
@@ -223,21 +237,42 @@
                 cameraRenderingShape(beginCameraRenderingMethod)
                     ? beginCameraRenderingMethod->function
                     : nullptr);
+#ifdef GAKU_VRIFY_HOSTED
+            GakumasVR::Hosted::cameraBeginProvider.SetTarget(0,
+                BeginCameraRendering_Orig ? beginCameraRenderingMethod->function : nullptr);
+#endif
             const auto* endCameraRenderingMethod = Il2cppUtils::GetMethod(
                 "UnityEngine.CoreModule.dll", "UnityEngine.Rendering",
                 "RenderPipeline", "EndCameraRendering");
-            ADD_HOOK(EndCameraRendering,
-                      cameraRenderingShape(endCameraRenderingMethod)
-                          ? endCameraRenderingMethod->function
-                          : nullptr);
+            #ifdef GAKU_VRIFY_HOSTED
+            if (!GakumasVR::Hosted::UseSharedCameraTarget(GAKULOCALIFY_CAMERA_RENDER_END,
+                cameraRenderingShape(endCameraRenderingMethod) ? endCameraRenderingMethod->function : nullptr))
+            #endif
+            {
+                ADD_HOOK(EndCameraRendering,
+                          cameraRenderingShape(endCameraRenderingMethod)
+                              ? endCameraRenderingMethod->function
+                              : nullptr);
+            }
             const auto* beginCameraRenderingManagerMethod = Il2cppUtils::GetMethod(
                 "UnityEngine.CoreModule.dll", "UnityEngine.Rendering",
                 "RenderPipelineManager", "BeginCameraRendering");
-            ADD_HOOK(
-                BeginCameraRenderingManager,
-                cameraRenderingShape(beginCameraRenderingManagerMethod)
-                    ? beginCameraRenderingManagerMethod->function
-                    : nullptr);
+#ifdef GAKU_VRIFY_HOSTED
+            const bool aliasedBegin = BeginCameraRendering_Orig && beginCameraRenderingMethod &&
+                beginCameraRenderingManagerMethod && cameraRenderingShape(beginCameraRenderingManagerMethod) &&
+                beginCameraRenderingMethod->function == beginCameraRenderingManagerMethod->function;
+            if (!aliasedBegin)
+#endif
+            {
+                ADD_HOOK(BeginCameraRenderingManager,
+                    cameraRenderingShape(beginCameraRenderingManagerMethod)
+                        ? beginCameraRenderingManagerMethod->function : nullptr);
+            }
+#ifdef GAKU_VRIFY_HOSTED
+            GakumasVR::Hosted::cameraBeginProvider.SetTarget(1,
+                (BeginCameraRenderingManager_Orig || aliasedBegin)
+                    ? beginCameraRenderingManagerMethod->function : nullptr);
+#endif
 
             const auto* doRenderLoopMethod = Il2cppUtils::GetMethod(
                 "UnityEngine.CoreModule.dll", "UnityEngine.Rendering",
@@ -1069,14 +1104,29 @@
 
 #ifdef GKMS_WINDOWS
         if (vrRuntime) {
+            #ifdef GAKU_VRIFY_HOSTED
+            (void)GakumasVR::Hosted::ConnectSharedCameraRender();
+            #endif
             unityCameraMainHookReady.store(
-                Camera_get_main_Orig != nullptr,
+                Camera_get_main_Orig != nullptr
+                #ifdef GAKU_VRIFY_HOSTED
+                || GakumasVR::Hosted::SharedCameraTargetReady(GAKULOCALIFY_CAMERA_RENDER_MAIN)
+                #endif
+                ,
                 std::memory_order_relaxed);
             unityCinemachineHookReady.store(
-                CinemachineBrain_PushStateToUnityCamera_Orig != nullptr,
+                CinemachineBrain_PushStateToUnityCamera_Orig != nullptr
+                #ifdef GAKU_VRIFY_HOSTED
+                || GakumasVR::Hosted::SharedCameraTargetReady(GAKULOCALIFY_CAMERA_RENDER_PUSH)
+                #endif
+                ,
                 std::memory_order_relaxed);
             unityCameraRenderHookReady.store(
-                EndCameraRendering_Orig != nullptr,
+                EndCameraRendering_Orig != nullptr
+                #ifdef GAKU_VRIFY_HOSTED
+                || GakumasVR::Hosted::SharedCameraTargetReady(GAKULOCALIFY_CAMERA_RENDER_END)
+                #endif
+                ,
                 std::memory_order_relaxed);
             unityRenderPipelineGuardReady.store(
                 DoRenderLoopInternal_Orig != nullptr,
@@ -1086,5 +1136,7 @@
         }
 #endif
 
+        #ifndef GAKU_VRIFY_HOSTED
         GakumasLocal::ModLoader::DispatchUnityReady();
+        #endif
     }

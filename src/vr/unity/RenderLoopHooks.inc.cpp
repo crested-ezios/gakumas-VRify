@@ -6,6 +6,7 @@
         ScriptableRenderer_ExecuteRenderPass_Orig(
             self, context, renderPass, renderingData, method);
 #ifdef GKMS_WINDOWS
+        if (!IsVrUnityRuntimeEnabled()) return;
         try {
             gakumas::vr::ObserveSmaaT2xRenderPass(
                 renderPass,
@@ -22,6 +23,10 @@
     DEFINE_HOOK(void, RenderObjectsPass_Execute,
                 (void* self, void* context, void* renderingData, void* method)) {
 #ifdef GKMS_WINDOWS
+        if (!IsVrUnityRuntimeEnabled()) {
+            RenderObjectsPass_Execute_Orig(self, context, renderingData, method);
+            return;
+        }
         try {
             void* camera = unityStereoRenderer.CurrentCamera();
             const bool isEye = unityStereoRenderer.IsEyeCamera(camera);
@@ -50,11 +55,11 @@
             unityRenderLoopDepth == 0U;
         ++unityRenderLoopDepth;
 #ifdef GKMS_WINDOWS
-        if (outerNormalLoop && Config::vrRuntimeStartupEnabled) {
+        if (outerNormalLoop && IsVrUnityRuntimeEnabled()) {
             gakumas::vr::TickLiveGaze();
             gakumas::vr::TickFollowCostumeHandover();
         }
-        if (outerNormalLoop && Config::vrRuntimeStartupEnabled) {
+        if (outerNormalLoop && IsVrUnityRuntimeEnabled()) {
             gakumas::vr::TickCommonLiveGazeProbe();
         }
         // The current Unity 6000 player invokes the camera callbacks from this
@@ -62,7 +67,7 @@
         // Begin/EndContextRendering event wrappers we can hook. Treat the
         // outer normal DoRenderLoop invocation itself as the authoritative
         // frame boundary so owned EndCamera callbacks can be attributed.
-        if (outerNormalLoop &&
+        if (outerNormalLoop && IsVrUnityRuntimeEnabled() &&
             unityRenderPipelineGuardReady.load(std::memory_order_acquire)) {
             gakumas::vr::VrRuntime::Instance().EnsureGraphicsBegun();
             if (!unityRenderLoopHookHitLogged.exchange(
@@ -99,7 +104,7 @@
         // This is the first hook point after Unity has returned from the whole
         // top-level SRP render loop. Unlike EndContextRendering, managed camera
         // mutation and native texture access are no longer inside an SRP callback.
-        if (outerNormalLoop && unityRenderLoopDepth == 0U &&
+        if (outerNormalLoop && IsVrUnityRuntimeEnabled() && unityRenderLoopDepth == 0U &&
             unityRenderPipelineGuardReady.load(std::memory_order_acquire)) {
             try {
                 VR_PERF_SCOPE(contextEnd, "unity.after-srp-context", perfSink);

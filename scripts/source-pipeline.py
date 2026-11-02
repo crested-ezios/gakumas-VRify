@@ -162,10 +162,14 @@ def stage_sources(root):
     print('Prepared verified upstream and local sources')
 
 
-def binary_receipt(root, binary, record):
+def binary_receipt(root, binary, record, mode='Standalone', sdk_header=None):
     receipt = verify(root)
     path = binary.with_suffix('.build.json')
-    expected = {'inputs': receipt['inputs'], 'binary': sha(binary.read_bytes())}
+    expected = {'inputs': receipt['inputs'], 'binary': sha(binary.read_bytes()), 'mode': mode}
+    if mode == 'Plugin':
+        if sdk_header is None:
+            raise RuntimeError('Plugin binary receipt requires the GakuLoader SDK header')
+        expected['loaderSdk'] = sha(sdk_header.read_bytes())
     if record:
         path.write_text(json.dumps(expected, indent=2) + '\n', encoding='utf-8')
     elif read_json(path) != expected:
@@ -177,6 +181,8 @@ def main():
     parser.add_argument('action', choices=['stage', 'verify', 'record-binary', 'verify-binary'])
     parser.add_argument('--root', type=Path, default=Path(__file__).resolve().parent.parent)
     parser.add_argument('--binary', type=Path)
+    parser.add_argument('--mode', choices=['Plugin', 'Standalone'], default='Standalone')
+    parser.add_argument('--sdk-header', type=Path)
     args = parser.parse_args()
     root = args.root.resolve()
     if args.action == 'stage':
@@ -184,7 +190,10 @@ def main():
     elif args.action == 'verify':
         verify(root)
     else:
-        binary_receipt(root, args.binary.resolve(), args.action == 'record-binary')
+        if args.binary is None:
+            parser.error('--binary is required for binary receipt operations')
+        binary_receipt(root, args.binary.resolve(), args.action == 'record-binary',
+                       args.mode, args.sdk_header.resolve() if args.sdk_header else None)
 
 
 if __name__ == '__main__':

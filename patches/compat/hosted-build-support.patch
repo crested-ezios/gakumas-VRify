@@ -1,0 +1,34 @@
+--- a/src/GakumasLocalify/Hook.cpp
++++ b/src/GakumasLocalify/Hook.cpp
+@@ -31,7 +31,7 @@
+ #ifdef GKMS_WINDOWS
+     #include "../windowsPlatform.hpp"
+     #include "GyroEmu.hpp"
+-    #include "cpprest/details/http_helpers.h"
++    #include "cpprest/asyncrt_utils.h"
+     #include "../resourceUpdate/resourceUpdate.hpp"
+ #endif
+ 
+--- a/src/GakumasLocalify/Misc.cpp
++++ b/src/GakumasLocalify/Misc.cpp
+@@ -9,7 +9,7 @@
+     
+     extern JavaVM* g_javaVM;
+ #else
+-    #include "cpprest/details/http_helpers.h"
++    #include "cpprest/asyncrt_utils.h"
+ #endif
+ 
+ 
+--- a/src/GakumasLocalify/Local.cpp
++++ b/src/GakumasLocalify/Local.cpp
+@@ -16,6 +16,9 @@
+ #include <algorithm>
+ #include "BaseDefine.h"
+ #include "string_parser/StringParser.hpp"
++#ifdef GKMS_WINDOWS
++#include <Windows.h>
++#endif
+ 
+ // #include "cpprest/details/http_helpers.h"
+ 

@@ -37,10 +37,15 @@
 #include <cctype>
 #include <intrin.h>
 #include "host/localify/PlatformDefine.hpp"
+#ifdef GAKU_VRIFY_HOSTED
+    #include "host/GakuVrifyUnity.hpp"
+#endif
 
 #ifdef GKMS_WINDOWS
     #include "host/VrWindowsPlatform.hpp"
+    #ifndef GAKU_VRIFY_HOSTED
     #include "host/localify/ModLoader.hpp"
+    #endif
     #include "vr/VrRuntime.hpp"
     #include "vr/VrFreeCamera.hpp"
     #include "vr/camera/FollowSmoothingProbe.hpp"
@@ -58,7 +63,7 @@
     #include "vr/input/UnityAnalogScroll.hpp"
     #include "vr/input/UnityPointerInput.hpp"
     #include "vr/pose/RelativePoseBridge.hpp"
-    #include "cpprest/details/http_helpers.h"
+    #include "cpprest/asyncrt_utils.h"
     #include "resourceUpdate/resourceUpdate.hpp"
 #endif
 

@@ -35,6 +35,9 @@
         }
 #endif
         BeginCameraRendering_Orig(ctx, camera, method);
+#ifdef GAKU_VRIFY_HOSTED
+        GakumasVR::Hosted::cameraBeginProvider.Dispatch(camera, unityStereoRenderer.IsEyeCamera(camera));
+#endif
     }
 
     DEFINE_HOOK(void, BeginCameraRenderingManager, (void* ctx, void* camera, void* method)) {
@@ -56,4 +59,7 @@
         }
 #endif
         BeginCameraRenderingManager_Orig(ctx, camera, method);
+#ifdef GAKU_VRIFY_HOSTED
+        GakumasVR::Hosted::cameraBeginProvider.Dispatch(camera, unityStereoRenderer.IsEyeCamera(camera));
+#endif
     }

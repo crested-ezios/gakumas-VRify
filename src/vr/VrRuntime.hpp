@@ -38,7 +38,13 @@ enum class VrRuntimeState {
     PoseReady,
     Faulted,
     Stopped,
+    Unavailable,
 };
+
+enum class VrUnavailableReason : std::uint32_t {
+    None, LoaderMissing, RuntimeMissing, HeadsetMissing, D3D11ExtensionMissing,
+};
+[[nodiscard]] const char* VrUnavailableReasonName(VrUnavailableReason reason) noexcept;
 
 enum class GameQuitSource {
     Menu,
@@ -58,6 +64,9 @@ struct VrRuntimeConfig {
     std::filesystem::path applicationDirectory;
     std::chrono::milliseconds runtimeRetryInterval{1000};
     std::chrono::milliseconds graphicsPollInterval{250};
+    // Native host log only; called on state transitions, independently of the
+    // optional detailed VR file log. Never invokes Unity or a UI callback.
+    void (*statusSink)(bool fault, const char* message) noexcept = nullptr;
 };
 
 class VrRuntime final {
@@ -90,6 +99,9 @@ public:
 
     [[nodiscard]] VrRuntimeState State() const noexcept;
     [[nodiscard]] XrResult LastOpenXrResult() const noexcept;
+    [[nodiscard]] VrUnavailableReason UnavailableReason() const noexcept { return unavailableReason_.load(); }
+    [[nodiscard]] bool GraphicsHooksReady() const noexcept { return graphicsHooksSnapshot_.load(); }
+    [[nodiscard]] std::uint32_t BackendAttempts() const noexcept { return backendAttempts_.load(); }
     [[nodiscard]] std::filesystem::path LogPath() const;
     [[nodiscard]] bool ReadLatestStereoPose(
         pose::StereoPoseSample& sample) const noexcept;
@@ -145,6 +157,7 @@ private:
     void PumpGameQuit() noexcept;
     void SetState(VrRuntimeState state);
     void Fault(std::string_view reason);
+    void Unavailable(VrUnavailableReason reason);
     static std::filesystem::path ResolveApplicationDirectory();
 
     std::mutex lifecycleMutex_;
@@ -165,6 +178,9 @@ private:
         openxr::OpenXrContext::EventResult::Healthy};
     std::atomic<VrRuntimeState> state_{VrRuntimeState::Disabled};
     std::atomic<XrResult> lastOpenXrResult_{XR_SUCCESS};
+    std::atomic<VrUnavailableReason> unavailableReason_{VrUnavailableReason::None};
+    std::atomic<bool> graphicsHooksSnapshot_{false};
+    std::atomic<std::uint32_t> backendAttempts_{0};
     std::mutex waitMutex_;
     std::condition_variable stopChanged_;
 
