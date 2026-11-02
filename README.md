@@ -4,6 +4,12 @@
 
 An unofficial VR mod for **Gakuen IDOLM@STER (学園アイドルマスター), DMM version only**, built on [gkms-localify-dmm](https://git.chinosk6.cn/chinosk/gkms-localify-dmm).
 
+## GakuLoader plugin version
+
+The hosted plugin source and camera coexistence updates are available on **[`feat/plugin-host`](https://github.com/crested-ezios/gakumas-VRify/blob/feat/plugin-host/README.md)**. Follow that branch's [build and installation guide](https://github.com/crested-ezios/gakumas-VRify/blob/feat/plugin-host/docs/GAKULOADER_PLUGIN.md) for the GakuLoader version. The [pluginized Localify source](https://gitee.com/Abstergo_Ezios/gkms-localify-dmm) is maintained separately.
+
+The standalone release instructions below continue to apply to the upstream release packages.
+
 ## Before you play
 
 - The game was not designed for VR. Characters may disappear or appear in the wrong place, and the image may flicker.

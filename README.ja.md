@@ -4,6 +4,12 @@
 
 『学園アイドルマスター』に VR 対応を追加する非公式 Mod です。**DMM 版のみに対応しています。** [gkms-localify-dmm](https://git.chinosk6.cn/chinosk/gkms-localify-dmm) をベースに開発しています。
 
+## GakuLoader プラグイン版
+
+プラグイン版のソースとカメラ共存の更新は **[`feat/plugin-host` ブランチ](https://github.com/crested-ezios/gakumas-VRify/blob/feat/plugin-host/README.ja.md)** にあります。GakuLoader 版は同ブランチの[ビルドと導入ガイド](https://github.com/crested-ezios/gakumas-VRify/blob/feat/plugin-host/docs/GAKULOADER_PLUGIN.md)を参照してください。[プラグイン版 Localify のソース](https://gitee.com/Abstergo_Ezios/gkms-localify-dmm)は別のリポジトリで管理しています。
+
+以下のスタンドアロン版の手順は、上流の Release パッケージを対象としています。
+
 ## ご利用前に
 
 - ゲーム自体は VR 向けに設計されていません。キャラクターが表示されない、位置がずれる、画面がちらつくなどの問題が発生する場合があります。

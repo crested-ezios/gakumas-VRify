@@ -4,6 +4,12 @@
 
 為《學園偶像大師》（学園アイドルマスター）加入 VR 支援的非官方 Mod，**僅適用於 DMM 版本**。本專案基於上游 [gkms-localify-dmm](https://git.chinosk6.cn/chinosk/gkms-localify-dmm) 開發。
 
+## GakuLoader 外掛版
+
+外掛版原始碼與相機共存更新位於 **[`feat/plugin-host` 分支](https://github.com/crested-ezios/gakumas-VRify/blob/feat/plugin-host/README.zh-TW.md)**。使用 GakuLoader 版請依該分支的[建置與安裝指南](https://github.com/crested-ezios/gakumas-VRify/blob/feat/plugin-host/docs/GAKULOADER_PLUGIN.md)操作。[外掛版 Localify 原始碼](https://gitee.com/Abstergo_Ezios/gkms-localify-dmm)另行維護。
+
+下方獨立版說明適用於上游 Release 安裝包。
+
 ## 使用前請閱讀
 
 - 遊戲本身並非為 VR 設計，使用時可能出現角色缺失、位置錯誤、畫面閃爍等情況。
