@@ -170,6 +170,9 @@ def binary_receipt(root, binary, record, mode='Standalone', sdk_header=None):
         if sdk_header is None:
             raise RuntimeError('Plugin binary receipt requires the GakuLoader SDK header')
         expected['loaderSdk'] = sha(sdk_header.read_bytes())
+        paths_header = sdk_header.with_name('GakuPaths.h')
+        if paths_header.exists():
+            expected['loaderPathsSdk'] = sha(paths_header.read_bytes())
     if record:
         path.write_text(json.dumps(expected, indent=2) + '\n', encoding='utf-8')
     elif read_json(path) != expected:
@@ -181,7 +184,7 @@ def main():
     parser.add_argument('action', choices=['stage', 'verify', 'record-binary', 'verify-binary'])
     parser.add_argument('--root', type=Path, default=Path(__file__).resolve().parent.parent)
     parser.add_argument('--binary', type=Path)
-    parser.add_argument('--mode', choices=['Plugin', 'Standalone'], default='Standalone')
+    parser.add_argument('--mode', choices=['Plugin', 'Standalone', 'Tool'], default='Standalone')
     parser.add_argument('--sdk-header', type=Path)
     args = parser.parse_args()
     root = args.root.resolve()

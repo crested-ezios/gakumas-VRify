@@ -62,6 +62,8 @@ struct VrRuntimeConfig {
     bool stereoLandscapeOnly = false;
     float stereoRenderScale = 1.0F;
     std::filesystem::path applicationDirectory;
+    // Optional data-service log root; dependency discovery stays application-local.
+    std::filesystem::path logDirectory;
     std::chrono::milliseconds runtimeRetryInterval{1000};
     std::chrono::milliseconds graphicsPollInterval{250};
     // Native host log only; called on state transitions, independently of the

@@ -7,6 +7,14 @@
 
 SHA256: `c02e006180e464a770bd31df52e89f5d539ceaaf4978f4e056734b5a5ca00abd`.
 
+`GakuPaths.h` is the unmodified optional paths-service declaration from GakuLoader
+checkpoint `0426648bd0601486347513af200aa4167a9fa09c`, `include/GakuPaths.h`.
+SHA256: `a1182d4903c642299fe28e3687a46ac23c19dfdb40e47a83e84da7af52865ea3`.
+That checkpoint preserves identical `GakuPlugin.h` bytes. Paths service v1 adds
+owner-bound UTF-16 Configs/UserData/PluginData/Cache/Logs/Temp roots without changing
+the existing Loader ABI v1. Both public headers are build inputs; running on an
+older host is limited to compatible legacy layouts.
+
 The accompanying LICENSE is the complete original MIT notice, copyright
 2026 GakuLoader Contributors. Retain it with copies of the SDK.
 

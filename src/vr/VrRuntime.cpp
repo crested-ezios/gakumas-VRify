@@ -324,7 +324,7 @@ bool VrRuntime::Start(VrRuntimeConfig config, HookRegistrar registrar) {
     scrollingPointerHand_ = 2;
     nextScrollLogTime_ = 0;
 
-    if (!log_.Open(config_.applicationDirectory, config_.diagnosticsEnabled)) {
+    if (!log_.Open(config_.applicationDirectory, config_.diagnosticsEnabled, config_.logDirectory)) {
         state_.store(VrRuntimeState::Faulted, std::memory_order_release);
         return false;
     }

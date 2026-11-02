@@ -19,7 +19,9 @@
 
 請使用配套的 GakuLoader 與外掛套件。自行編譯請參閱[建置指南](BUILDING.md)；公開 Loader SDK 標頭已隨倉庫提供，編譯外掛不需要私有 Loader 實作。
 
-安裝前關閉遊戲。外掛套件將 `GakuVRify.dll` 放入 `gakumas-local/plugins/`，OpenXR loader 放在遊戲執行檔旁，VR 設定位於 `gakumas-vr/`。GakuLoader 另行安裝。套件清單、設定保留與還原方式見[外掛指南](docs/GAKULOADER_PLUGIN.md)。
+安裝前關閉遊戲。外掛套件將 `GakuVRify.dll` 放入 `gakumas-local/plugins/`，OpenXR loader 放在遊戲執行檔旁。全新設定使用 `gakumas-local/Configs/gaku.vrify/`，狀態和診斷記錄分別使用 `PluginData/gaku.vrify/`、`Logs/gaku.vrify/`。GakuLoader 另行安裝；套件清單與還原方式見[外掛指南](docs/GAKULOADER_PLUGIN.md)。
+
+既有 VR 設定可繼續原位使用，直到明確執行[規劃、備份和遷移](docs/CONFIG_MIGRATION_V2_20261102.md)。隨附原生工具會保留舊設定、遷移記錄和日誌；套件僅含設定範例，不覆寫使用中的設定。
 
 通用安裝程式無法驗證外部 Localify/Motion provider 是否配套，因此仍保守拒絕完整 Unity VR 混裝。共用橋接已實作；該安裝程式不負責自動升級並驗證整組元件。
 

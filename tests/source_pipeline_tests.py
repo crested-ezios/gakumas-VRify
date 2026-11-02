@@ -93,6 +93,23 @@ class StagingTests(unittest.TestCase):
             with self.assertRaises((RuntimeError, subprocess.CalledProcessError)):
                 pipeline.stage_sources(self.root)
 
+    def test_plugin_receipt_tracks_optional_paths_header(self):
+        pipeline.stage_sources(self.root)
+        binary = self.root / 'build/GakuVRify.dll'
+        binary.write_bytes(b'fixture plugin DLL')
+        sdk = self.root / 'scripts/GakuPlugin.h'
+        sdk.write_bytes(b'fixture ABI v1')
+        paths_sdk = sdk.with_name('GakuPaths.h')
+        paths_sdk.write_bytes(b'paths ABI v1')
+        pipeline.binary_receipt(self.root, binary, True, 'Plugin', sdk)
+        pipeline.binary_receipt(self.root, binary, False, 'Plugin', sdk)
+        paths_sdk.write_bytes(b'changed paths ABI')
+        with self.assertRaises(RuntimeError):
+            pipeline.binary_receipt(self.root, binary, False, 'Plugin', sdk)
+        paths_sdk.unlink()
+        with self.assertRaises(RuntimeError):
+            pipeline.binary_receipt(self.root, binary, False, 'Plugin', sdk)
+
     def test_missing_and_changed_patch(self):
         patch = self.root / 'patches/test.patch'
         patch.write_bytes(b'bad patch')

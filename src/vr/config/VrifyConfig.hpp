@@ -243,8 +243,14 @@ namespace GakumasLocal::Config {
     enum class ConfigLoadPurpose { LocalifyReload, StartupMigration };
     void LoadConfig(const std::string& configStr,
         ConfigLoadPurpose purpose);
-    void LoadVrConfig(
+    bool LoadVrConfig(
         const std::filesystem::path& configPath,
         const std::filesystem::path& legacyConfigPath);
-    void SaveVrConfig(const std::filesystem::path& configPath);
+    bool SaveVrConfig(const std::filesystem::path& configPath);
+    bool InitializeHostedVrConfig(const std::filesystem::path& legacyDirectory,
+        const std::filesystem::path& mixedConfig,
+        const std::filesystem::path& managedConfigRoot,
+        std::filesystem::path& selectedPath, bool& managedLayout,
+        const std::filesystem::path& pluginDataRoot = {},
+        const std::filesystem::path& logRoot = {});
 }

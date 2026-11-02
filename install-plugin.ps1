@@ -39,13 +39,97 @@ if (-not (Test-Path -LiteralPath (Join-Path $GameRoot 'gakumas.exe')) -or
 if (Get-Process -Name gakumas -ErrorAction SilentlyContinue) {
     throw 'Close the game before installing GakuVRify.'
 }
-$configRelative = 'gakumas-vr/config.json'
-$configTarget = Join-Path $GameRoot $configRelative
-$effectiveConfig = if (Test-Path -LiteralPath $configTarget) { $configTarget } else {
-    Join-Path $packageRoot $configRelative
+$exampleRelative = 'gakumas-vr/config.example.json'
+function Read-JsonObject([string]$Path) {
+    $document = Get-Content -LiteralPath $Path -Raw -Encoding utf8 | ConvertFrom-Json -AsHashtable
+    if ($document -isnot [System.Collections.IDictionary]) {
+        throw "Expected a JSON object; no files were installed: $Path"
+    }
+    return $document
 }
-$config = Get-Content -LiteralPath $effectiveConfig -Raw | ConvertFrom-Json
-if ($config.vrEnabled -and -not $config.vrNativeOnly) {
+function Assert-KnownSchema($Document, [string]$Path) {
+    if ($Document.Contains('schemaVersion') -and
+        (($Document.schemaVersion -isnot [int] -and $Document.schemaVersion -isnot [long]) -or
+         $Document.schemaVersion -lt 0 -or $Document.schemaVersion -gt 1)) {
+        throw "Unsupported configuration schema; no files were installed: $Path"
+    }
+}
+function Read-VrBoolean($Document, [string]$Name, [bool]$Default, [string]$Path) {
+    if (-not $Document.Contains($Name)) { return $Default }
+    if ($Document[$Name] -isnot [bool]) {
+        throw "Expected a boolean '$Name'; no files were installed: $Path"
+    }
+    return $Document[$Name]
+}
+$templatePath = Join-Path $packageRoot $exampleRelative
+$template = Read-JsonObject $templatePath
+Assert-KnownSchema $template $templatePath
+$newConfig = Join-Path $GameRoot 'gakumas-local/Configs/gaku.vrify/config.json'
+$oldConfig = Join-Path $GameRoot 'gakumas-vr/config.json'
+$mixedConfig = Join-Path $GameRoot 'gakumas-local/localizationConfig.json'
+$layoutPath = Join-Path $GameRoot 'gakumas-vr/config-layout.json'
+$activeLayoutPath = Join-Path $GameRoot 'gakumas-local/PluginData/gaku.vrify/active-layout.json'
+$pathsLayout = $false
+if (Test-Path -LiteralPath $activeLayoutPath) {
+    $active = Read-JsonObject $activeLayoutPath
+    $expectedLogRoot = Join-Path $GameRoot 'gakumas-local/Logs/gaku.vrify'
+    if (($active.schemaVersion -isnot [int] -and $active.schemaVersion -isnot [long]) -or
+        ($active.layoutVersion -isnot [int] -and $active.layoutVersion -isnot [long]) -or
+        $active.schemaVersion -ne 1 -or $active.layoutVersion -ne 2 -or $active.pluginId -cne 'gaku.vrify' -or
+        $active.configPath -isnot [string] -or $active.logRoot -isnot [string] -or
+        -not [IO.Path]::IsPathFullyQualified($active.configPath) -or
+        -not [IO.Path]::IsPathFullyQualified($active.logRoot) -or
+        [IO.Path]::GetFullPath($active.configPath) -ne [IO.Path]::GetFullPath($newConfig) -or
+        [IO.Path]::GetFullPath($active.logRoot) -ne [IO.Path]::GetFullPath($expectedLogRoot)) {
+        throw 'Unsupported or mismatched standard VR layout; active state and original files were preserved.'
+    }
+    if (-not (Test-Path -LiteralPath $newConfig -PathType Leaf)) {
+        throw 'Standard VR configuration is missing. Legacy remnants will not be used.'
+    }
+    $pathsLayout = $true
+} elseif (Test-Path -LiteralPath $layoutPath) {
+    $layout = Read-JsonObject $layoutPath
+    if (($layout.schemaVersion -isnot [int] -and $layout.schemaVersion -isnot [long]) -or
+        $layout.schemaVersion -ne 1 -or $layout.layout -cnotin @('legacy', 'paths-v1') -or
+        $layout.phase -cnotin @('planned', 'completed') -or $layout.configPath -isnot [string]) {
+        throw "Unsupported VR layout record; no files were installed: $layoutPath"
+    }
+    $pathsLayout = $layout.layout -ceq 'paths-v1'
+    if ($pathsLayout) {
+        # A saved external override is an identity check, never an instruction
+        # for this installer to read arbitrary paths or guess Loader settings.
+        if (-not [IO.Path]::IsPathFullyQualified([string]$layout.configPath) -or
+            [IO.Path]::GetFullPath([string]$layout.configPath) -ne [IO.Path]::GetFullPath($newConfig)) {
+            throw 'VR uses a Loader path override. Use the matching Loader path configuration to inspect compatibility before installing.'
+        }
+        if (-not (Test-Path -LiteralPath $newConfig -PathType Leaf)) {
+            throw 'VR paths-v1 configuration is missing. Resolve its first-use state before installation; legacy remnants will not be used.'
+        }
+    }
+}
+$effectiveConfig = $templatePath
+$config = $template
+if (Test-Path -LiteralPath $newConfig) {
+    $effectiveConfig = $newConfig
+    $config = Read-JsonObject $newConfig
+} elseif (-not $pathsLayout -and (Test-Path -LiteralPath $oldConfig)) {
+    $effectiveConfig = $oldConfig
+    $config = Read-JsonObject $oldConfig
+} elseif (-not $pathsLayout -and (Test-Path -LiteralPath $mixedConfig)) {
+    $mixed = Read-JsonObject $mixedConfig
+    $knownVrKeys = @($template.Keys | Where-Object { $_ -ne 'schemaVersion' }) + @('vrDebugEnabled', 'vrProbeOnly')
+    if (@($mixed.Keys | Where-Object { $_ -cin $knownVrKeys }).Count -gt 0) {
+        $effectiveConfig = $mixedConfig
+        $config = $mixed
+    }
+}
+Assert-KnownSchema $config $effectiveConfig
+# Missing legacy keys use the runtime's safe defaults; pure new installs use
+# the release template selected above. New names take precedence over aliases.
+$vrEnabled = Read-VrBoolean $config 'vrEnabled' $false $effectiveConfig
+$nativeKey = if ($config.Contains('vrNativeOnly')) { 'vrNativeOnly' } else { 'vrProbeOnly' }
+$vrNativeOnly = Read-VrBoolean $config $nativeKey $true $effectiveConfig
+if ($vrEnabled -and -not $vrNativeOnly) {
     foreach ($other in @('GakuLocalify.dll', 'GakuMotion.dll')) {
         if (Test-Path -LiteralPath (Join-Path $GameRoot "gakumas-local/plugins/$other")) {
             throw "Full Unity VR with $other still needs camera/render bridges. Use a separate GakuLoader + VRify test installation."
@@ -55,7 +139,8 @@ if ($config.vrEnabled -and -not $config.vrNativeOnly) {
 
 # Validate every input before touching the installation. The loader proxy and
 # Localify configuration are deliberately absent from the install whitelist.
-$allowed = @('gakumas-local/plugins/GakuVRify.dll', 'openxr_loader.dll', $configRelative,
+$allowed = @('gakumas-local/plugins/GakuVRify.dll', 'gakumas-local/tools/gaku.vrify/vr-config-migration.exe',
+    'openxr_loader.dll', $exampleRelative,
     'gakumas-vr/version.txt',
     'gakumas-vr/licenses/OpenXR-loader.txt', 'gakumas-vr/licenses/GakuVRify.txt',
     'gakumas-vr/licenses/THIRD_PARTY_NOTICES.md', 'gakumas-vr/licenses/GakuLoader-SDK.txt')
@@ -66,7 +151,6 @@ foreach ($relative in $allowed) {
         (Get-FileHash -LiteralPath $source -Algorithm SHA256).Hash -ne $manifest.files[$relative]) {
         throw "Package file verification failed: $relative"
     }
-    if ($relative -eq $configRelative -and (Test-Path -LiteralPath $configTarget)) { continue }
     $entries += [pscustomobject]@{ relative = $relative; source = $source }
 }
 $deploymentRoot = Join-Path $projectRoot ('build/plugin-deployments/' +
@@ -129,4 +213,4 @@ foreach ($entry in $entries) {
         throw "Installed hash mismatch; restore using $deploymentRoot/Restore.ps1"
     }
 }
-Write-Host "Installed GakuVRify plugin. Existing VR configuration was preserved. Recovery: $deploymentRoot/Restore.ps1"
+Write-Host "Installed GakuVRify plugin and example config. Active configuration was preserved; first-use import runs in VRify. Recovery: $deploymentRoot/Restore.ps1"

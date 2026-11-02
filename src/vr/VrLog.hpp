@@ -24,7 +24,8 @@ public:
     // gakumas-vr/logs/vr-YYYYMMDD-HHMMSS.log per Open(), no append/rotate/cap.
     [[nodiscard]] bool Open(
         const std::filesystem::path& applicationDirectory,
-        bool fileEnabled = true);
+        bool fileEnabled = true,
+        const std::filesystem::path& logDirectory = {});
     void Close() noexcept;
     // Returns true when the message reached the on-disk log, or when file
     // logging is intentionally off after Open(). false means the caller may

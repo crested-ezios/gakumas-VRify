@@ -19,7 +19,9 @@
 
 対応する GakuLoader とプラグインパッケージを使用してください。ソースからの作成は[ビルド手順](BUILDING.md)を参照してください。公開 Loader SDK ヘッダーを同梱しており、プラグインのコンパイルに非公開の Loader 実装は必要ありません。
 
-インストール前にゲームを終了してください。パッケージは `GakuVRify.dll` を `gakumas-local/plugins/` に、OpenXR loader をゲーム実行ファイルの隣に、VR 設定を `gakumas-vr/` に配置します。GakuLoader は別途インストールします。内容、設定の保持、復元については[プラグインガイド](docs/GAKULOADER_PLUGIN.md)をご覧ください。
+インストール前にゲームを終了してください。パッケージは `GakuVRify.dll` を `gakumas-local/plugins/` に、OpenXR loader をゲーム実行ファイルの隣に配置します。新規設定は `gakumas-local/Configs/gaku.vrify/`、状態と診断ログは `PluginData/gaku.vrify/` と `Logs/gaku.vrify/` を使用します。GakuLoader は別途インストールします。[プラグインガイド](docs/GAKULOADER_PLUGIN.md)もご覧ください。
+
+既存設定は、明示的な[計画・バックアップ・移行](docs/CONFIG_MIGRATION_V2_20261102.md)まで元の場所で使用できます。同梱のネイティブツールは古い設定・移行記録・ログを保持します。パッケージには設定例のみを含め、使用中の設定は上書きしません。
 
 汎用インストーラーは外部の Localify/Motion provider の組み合わせを検証できないため、完全な Unity VR との混在を引き続き拒否します。共有ブリッジは実装済みですが、インストーラーが対応する全コンポーネントを自動更新・検証するわけではありません。
 

@@ -20,7 +20,7 @@ Set-Location gakumas-VRify
 ./build.ps1 -Mode Plugin -Configuration Release
 ```
 
-The default SDK is [`sdk/gakuloader/`](sdk/gakuloader/PROVENANCE.md), containing `GakuPlugin.h` and its complete MIT license. To test another compatible SDK explicitly, pass `-LoaderSdkDirectory '<sdk include directory>'`. This changes a build input, so rebuild and revalidate the resulting DLL.
+The default SDK is [`sdk/gakuloader/`](sdk/gakuloader/PROVENANCE.md), containing `GakuPlugin.h`, `GakuPaths.h` and their complete MIT license. To test another compatible SDK explicitly, pass `-LoaderSdkDirectory '<sdk include directory>'`. Both headers are build inputs, so rebuild and revalidate the resulting DLL after changing them.
 
 The build script:
 
@@ -30,7 +30,7 @@ The build script:
 4. Resolves the Conan lock/profile with the repository-local `.tools/conan2/` cache, configures CMake and builds the plugin.
 5. Records source, SDK and binary receipts used to reject stale packaging inputs.
 
-Output: **`build/bin/plugin/x64/Release/GakuVRify.dll`**, with a PDB. The script does not install it into a game. Edit owned sources, then rebuild through `build.ps1`; direct edits to generated `build/source/` are not permanent changes.
+Outputs: **`build/bin/plugin/x64/Release/GakuVRify.dll`**, with a PDB, and **`build/tools/Release/vr-config-migration.exe`**. The migration utility is a native executable with static CRT and does not invoke Python at runtime. The build script does not install or migrate game data. Edit owned sources, then rebuild through `build.ps1`; direct edits to generated `build/source/` are not permanent changes.
 
 Use `-CompilerVersion 14.53.36919` to select an exact installed toolset. Use `-Offline` only with an already available locked upstream, Python tools and Conan binaries; it forbids dependency downloads/rebuilds. It is not a self-contained offline installer. `-DependencyCompilerVersion 194` explicitly selects dependencies built for the older compatible MSVC 19.4 ABI while retaining the actual newer consumer compiler. This is an optional cache-reuse choice, not a claim that the consumer is compiler 19.4. The local validation used `-Offline -DependencyCompilerVersion 194 -CompilerVersion 14.53.36919`; rebuilding the dependencies themselves under 19.5 was not tested.
 
@@ -50,6 +50,7 @@ After building the plugin, run its production-DLL lifecycle and mock-host tests:
 
 ```powershell
 ./tests/test-hosted-plugin.ps1 -Configuration Release
+./tests/test-config-migration-tool.ps1
 ```
 
 The mock host exercises the real plugin DLL and owned hook facade without compiling a private Loader implementation. Source-pipeline tests create artificial upstream repositories; they are not verification of an installed game or the real upstream build tree.
@@ -75,6 +76,8 @@ Pass `-GakuLoaderRoot`, `-LocalifyRoot` and `-RealOpenXrLoader` explicitly to th
 ```
 
 This verifies the build receipt, fetches/verifies the official Khronos OpenXR loader 1.1.61 and creates `build/plugin-package/`, including component licenses and a file-hash manifest. Package contents and recovery are described in [the plugin guide](docs/GAKULOADER_PLUGIN.md).
+
+With the verified loader archive already cached, `./package-plugin.ps1 -Configuration Release -Offline` refuses any download. Packages include the native migration utility and `config.example.json`, with no active settings file. Standard directories and explicit migration are described in [layout v2](docs/CONFIG_MIGRATION_V2_20261102.md).
 
 Installation changes a game directory. Close the game first and use the package matched to your Loader and any cooperating providers:
 

@@ -42,9 +42,23 @@ if ($LASTEXITCODE -ne 0) { throw 'Hosted hook-facade behavior failed.' }
 $runRoot = Join-Path $buildRoot ('run-' + [Guid]::NewGuid().ToString('N'))
 $scenarios = @('abi', 'missing:gakuloader.log', 'missing:gakuloader.runtime',
     'missing:gakuloader.hooks', 'missing:gakuloader.actor-entry', 'service-conflict',
-    'disabled', 'enabled-without-runtime', 'invalid-vr-config')
+    'disabled', 'enabled-without-runtime', 'invalid-vr-config',
+    'fresh-paths', 'mixed-legacy', 'new-priority', 'future-schema', 'managed-no-service', 'mixed-invalid-type',
+    'new-without-service', 'standard-prepared', 'standard-no-service')
 foreach ($scenario in $scenarios) {
     $scenarioRoot = Join-Path $runRoot ($scenario.Replace(':', '-'))
+    if ($scenario -in @('standard-prepared','standard-no-service')) {
+        $legacyRoot=Join-Path $scenarioRoot 'gakumas-vr'
+        New-Item -ItemType Directory -Path $legacyRoot -Force | Out-Null
+        [IO.File]::WriteAllText((Join-Path $scenarioRoot 'gakumas.exe'),'synthetic game sentinel, never launched')
+        [IO.File]::WriteAllText((Join-Path $legacyRoot 'config.json'),'{"schemaVersion":1,"vrEnabled":false}')
+        $migrationTool=Join-Path $projectRoot "build/tools/$Configuration/vr-config-migration.exe"
+        $planPath=Join-Path $runRoot "$scenario-plan.json"
+        & $migrationTool --plan $scenarioRoot $planPath
+        if ($LASTEXITCODE -ne 0) { throw "Synthetic standard-layout plan failed: $scenario" }
+        & $migrationTool --apply $planPath --expect-sha256 (Get-FileHash -LiteralPath $planPath).Hash.ToLowerInvariant()
+        if ($LASTEXITCODE -ne 0) { throw "Synthetic standard-layout apply failed: $scenario" }
+    }
     & $executable $PluginPath $scenario $scenarioRoot
     if ($LASTEXITCODE -ne 0) { throw "Hosted production-plugin test failed: $scenario" }
 }

@@ -19,7 +19,9 @@ This branch contains the current **GakuLoader plugin integration**, built as `Ga
 
 Use a matching GakuLoader installation and plugin package. For a source build, follow [BUILDING.md](BUILDING.md); the public Loader SDK header is included, and no private Loader implementation is needed to compile the plugin.
 
-Close the game before installing. The plugin package places `GakuVRify.dll` in `gakumas-local/plugins/`, the OpenXR loader beside the game executable, and VR settings under `gakumas-vr/`. GakuLoader is installed separately. See the [plugin guide](docs/GAKULOADER_PLUGIN.md) for package contents, configuration preservation and recovery.
+Close the game before installing. The package places `GakuVRify.dll` in `gakumas-local/plugins/` and the OpenXR loader beside the game executable. Fresh settings use `gakumas-local/Configs/gaku.vrify/`; state and diagnostic logs use `PluginData/gaku.vrify/` and `Logs/gaku.vrify/`. GakuLoader is installed separately. See the [plugin guide](docs/GAKULOADER_PLUGIN.md) for package contents and recovery.
+
+Existing VR settings remain usable in place until an explicit [plan/backup/apply migration](docs/CONFIG_MIGRATION_V2_20261102.md). The included native tool preserves old configs, receipts and logs. Packages contain a configuration example and never overwrite active settings.
 
 The generic installer conservatively rejects full Unity VR alongside Localify/Motion because it cannot verify a matching external provider pair. The shared bridges are implemented; this guard is not an automatic paired-component upgrade mechanism.
 

@@ -2,8 +2,10 @@
 // Loads the production plugin in a plain native process. Every scenario runs
 // in its own process so process-lifetime provider state cannot hide failures.
 #include "GakuPlugin.h"
+#include "GakuPaths.h"
 #include "../../src/host/GakuVrifyDiagnostics.h"
 #include <windows.h>
+#include <algorithm>
 #include <cstdio>
 #include <cstring>
 #include <filesystem>
@@ -36,7 +38,21 @@ struct MockHost {
     size_t acquireCalls = 0, batchCalls = 0, releaseCalls = 0;
     size_t actorRegistrations = 0, actorUnregistrations = 0;
     bool rejectRegistration = false;
+    bool pathsAvailable = false;
 };
+GakuStatus GetPath(void* context, GakuPathKind kind, wchar_t* output, uint32_t capacity, uint32_t* required) {
+    const auto& host = *static_cast<MockHost*>(context);
+    if (!required || (kind != GAKU_PATH_CONFIGS && kind != GAKU_PATH_LOGS && kind != GAKU_PATH_PLUGIN_DATA)) return GAKU_E_INVALID_ARGUMENT;
+    const auto path = std::filesystem::path(host.localRoot) /
+        (kind == GAKU_PATH_CONFIGS ? L"Configs" : kind == GAKU_PATH_LOGS ? L"Logs" : L"PluginData") / L"gaku.vrify";
+    const auto value = path.wstring();
+    *required = static_cast<uint32_t>(value.size() + 1);
+    if (capacity < *required) return GAKU_E_SIZE;
+    if (!output) return GAKU_E_INVALID_ARGUMENT;
+    std::copy(value.c_str(), value.c_str() + value.size() + 1, output);
+    return GAKU_OK;
+}
+GakuStatus EnsurePath(void*, GakuPathKind) { return GAKU_OK; }
 void WriteLog(void* context, GakuLogLevel, const char* message) {
     auto& host = *static_cast<MockHost*>(context);
     Check(message != nullptr, "logger received null message");
@@ -88,6 +104,10 @@ GakuStatus QueryService(void* context, const char* name, uint32_t version,
     Check(name != nullptr, "null service query");
     host.queried.emplace_back(name);
     if (host.missing == name) return GAKU_E_UNAVAILABLE;
+    if (std::strcmp(name, GAKU_SERVICE_PATHS) == 0 && host.pathsAvailable) {
+        const GakuPathsV1 service{GAKU_PATHS_VERSION, sizeof(service), &host, GetPath, EnsurePath};
+        return CopyTable(service, version, size, output);
+    }
     if (std::strcmp(name, GAKU_SERVICE_LOG) == 0) {
         const GakuLogService service{GAKU_SERVICE_VERSION, sizeof(service), &host, WriteLog};
         return CopyTable(service, version, size, output);
@@ -238,17 +258,36 @@ int wmain(int argc, wchar_t** argv) {
             return 0;
         }
         std::filesystem::create_directories(testRoot / "gakumas-vr");
-        {
+        if (scenario != L"fresh-paths" && scenario != L"mixed-legacy" && scenario != L"mixed-invalid-type") {
             std::ofstream config(testRoot / "gakumas-vr" / "config.json");
             Check(config.good(), "cannot write test VR configuration");
             if (scenario == L"invalid-vr-config") config << "{invalid JSON";
-            else if (scenario == L"enabled-without-runtime") config << "{\"vrEnabled\":true}";
+            else if (scenario == L"future-schema") config << "{\"schemaVersion\":2,\"vrEnabled\":true}";
+            else if (scenario == L"enabled-without-runtime" || scenario == L"new-priority" || scenario == L"new-without-service" ||
+                scenario == L"managed-no-service" || scenario == L"standard-prepared" || scenario == L"standard-no-service") config << "{\"vrEnabled\":true}";
             else config << "{\"vrEnabled\":false}";
         }
         MockHost mock;
         mock.gameRoot = testRoot.wstring();
         mock.localRoot = (testRoot / "gakumas-local").wstring();
         mock.pluginsRoot = (testRoot / "gakumas-local" / "plugins").wstring();
+        mock.pathsAvailable = scenario == L"fresh-paths" || scenario == L"new-priority" || scenario == L"mixed-legacy" || scenario == L"standard-prepared";
+        if (scenario == L"mixed-legacy" || scenario == L"mixed-invalid-type") {
+            std::filesystem::create_directories(mock.localRoot);
+            std::ofstream source(testRoot / "gakumas-local" / "localizationConfig.json");
+            if (scenario == L"mixed-invalid-type") source << "{\"vrEnabled\":false,\"vrMenuLanguage\":\"ja\"}";
+            else source << "{\"vrEnabled\":false,\"vrDebugEnabled\":true,\"vrDiagnosticsEnabled\":false,"
+                    "\"vrProbeOnly\":false,\"vrNativeOnly\":true,\"vrMenuLanguage\":2,\"downloadUrl\":\"sentinel\"}";
+        }
+        if (scenario == L"new-priority" || scenario == L"new-without-service") {
+            const auto managed = testRoot / "gakumas-local" / "Configs" / "gaku.vrify";
+            std::filesystem::create_directories(managed);
+            std::ofstream(managed / "config.json") << "{\"schemaVersion\":1,\"vrEnabled\":false}";
+        }
+        if (scenario == L"managed-no-service") {
+            std::ofstream(testRoot / "gakumas-vr" / "config-layout.json") <<
+                "{\"schemaVersion\":1,\"layout\":\"paths-v1\",\"phase\":\"completed\"}";
+        }
         if (scenario.starts_with(L"missing:")) {
             const auto missing = scenario.substr(8);
             for (const auto character : missing) {
@@ -269,12 +308,20 @@ int wmain(int argc, wchar_t** argv) {
             return 0;
         }
         Check(scenario == L"disabled" || scenario == L"invalid-vr-config" ||
-            scenario == L"enabled-without-runtime", "unknown test scenario");
+            scenario == L"enabled-without-runtime" || scenario == L"fresh-paths" ||
+            scenario == L"mixed-legacy" || scenario == L"new-priority" ||
+            scenario == L"future-schema" || scenario == L"managed-no-service" ||
+            scenario == L"mixed-invalid-type" || scenario == L"new-without-service" ||
+            scenario == L"standard-prepared" || scenario == L"standard-no-service", "unknown test scenario");
         Check(status == GAKU_OK, "safe production plugin failed activation");
         Check(mock.serviceRegistrations == 1 && mock.vrify.isVrActive && mock.vrify.isLiveGazeActive,
             "status service was not registered");
         Check(mock.vrify.isVrActive() == 0 && mock.vrify.isLiveGazeActive() == 0,
             "plugin advertised active VR/gaze without a session");
+        if (scenario == L"standard-prepared" || scenario == L"standard-no-service")
+            Check(std::any_of(mock.logs.begin(), mock.logs.end(), [](const std::string& message) {
+                return message.find("activated with VR disabled") != std::string::npos;
+            }), "restart used enabled legacy residue instead of standard settings or fail-closed policy");
         descriptor.onRuntimeReady(state);
         if (descriptor.onTick) descriptor.onTick(state, 1.0F / 60.0F);
         // No fake actor pointer is passed: this harness never fabricates managed
@@ -287,8 +334,36 @@ int wmain(int argc, wchar_t** argv) {
         Check(mock.vrify.isVrActive() == 0 && mock.vrify.isLiveGazeActive() == 0,
             "service reports active state after shutdown");
         Check(!std::filesystem::exists(testRoot / "gakumas-local" / "config.json") &&
-            !std::filesystem::exists(testRoot / "gakumas-local" / "localizationConfig.json"),
+            (scenario == L"mixed-legacy" || scenario == L"mixed-invalid-type" ||
+                !std::filesystem::exists(testRoot / "gakumas-local" / "localizationConfig.json")),
             "hosted plugin wrote Localify business configuration");
+        if (scenario == L"fresh-paths") {
+            const auto freshConfig = testRoot / "gakumas-local" / "Configs" / "gaku.vrify" / "config.json";
+            Check(std::filesystem::exists(freshConfig),
+                "fresh paths-service config was not initialized");
+            std::ifstream input(freshConfig);
+            const std::string text((std::istreambuf_iterator<char>(input)), {});
+            Check(text.find("\"vrEnabled\": true") != std::string::npos &&
+                text.find("\"vrNativeOnly\": false") != std::string::npos,
+                "fresh config used safe memory defaults instead of the embedded release template");
+            Check(!std::filesystem::exists(testRoot / "gakumas-vr" / "config.json"),
+                "fresh paths-service config created a legacy activity file");
+            Check(!std::filesystem::exists(testRoot / "gakumas-vr" / "config-layout.json") &&
+                std::filesystem::exists(testRoot / "gakumas-local" / "PluginData" / "gaku.vrify" / "active-layout.json"),
+                "fresh standard state was not consolidated under PluginData");
+        }
+        if (scenario == L"mixed-invalid-type")
+            Check(!std::filesystem::exists(testRoot / "gakumas-vr" / "config.json"),
+                "invalid known mixed field type created an active configuration");
+        if (scenario == L"mixed-legacy") {
+            std::ifstream input(testRoot / "gakumas-vr" / "config.json");
+            const std::string text((std::istreambuf_iterator<char>(input)), {});
+            Check(text.find("\"vrMenuLanguage\": 2") != std::string::npos &&
+                text.find("downloadUrl") == std::string::npos &&
+                text.find("vrDebugEnabled") == std::string::npos &&
+                text.find("\"vrDiagnosticsEnabled\": false") != std::string::npos,
+                "mixed VR settings were not filtered/normalized with new names preferred");
+        }
         Check(WindowCount() == initialWindows, "safe lifecycle created a UI window");
         Check(GetModuleHandleW(L"GameAssembly.dll") == nullptr, "safe lifecycle loaded a game module");
         if (scenario == L"invalid-vr-config")

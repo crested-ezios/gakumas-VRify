@@ -1,5 +1,7 @@
 #include <string>
 #include "VrifyConfig.hpp"
+#include "VrConfigStartup.hpp"
+#include "VrConfigDefaults.hpp"
 #include "host/localify/ConfigIntegration.hpp"
 #include "../camera/FollowSmoothing.hpp"
 #include "../LiveGaze.hpp"
@@ -412,87 +414,158 @@ namespace GakumasLocal::Config {
         LoadConfig(configStr);
     }
 
-    void SaveVrConfig(const std::filesystem::path& configPath) {
-        try {
-            if (!configPath.parent_path().empty()) {
-                std::filesystem::create_directories(configPath.parent_path());
+    namespace {
+        bool configWritable = false;
+        void ValidateCandidate(const nlohmann::json& config) {
+            ValidateVrConfigSchema(config);
+            ResetVrConfigFailClosed();
+            const auto known = BuildVrConfig();
+            for (auto it = known.begin(); it != known.end(); ++it) {
+                if (!config.contains(it.key()) || it.key() == "schemaVersion") continue;
+                const auto& value = config.at(it.key());
+                const auto& expected = it.value();
+                if ((expected.is_boolean() && !value.is_boolean()) ||
+                    (expected.is_number_integer() && !value.is_number_integer()) ||
+                    (expected.is_number_float() && !value.is_number()) ||
+                    (expected.is_string() && !value.is_string()))
+                    throw std::runtime_error("invalid VR configuration field type: " + it.key());
             }
-            const auto config = BuildVrConfig();
-            auto tempPath = configPath;
-            tempPath += L".tmp";
-            {
-                std::ofstream out(tempPath, std::ios::binary | std::ios::trunc);
-                if (!out) {
-                    Log::ErrorFmt(
-                        "SaveVrConfig error: Cannot open file: %s",
-                        tempPath.string().c_str());
-                    return;
-                }
-                out << config.dump(4);
-                out.flush();
-                if (!out) {
-                    Log::ErrorFmt(
-                        "SaveVrConfig error: Cannot write file: %s",
-                        tempPath.string().c_str());
-                    return;
-                }
-            }
-#ifdef _WIN32
-            if (!MoveFileExW(
-                    tempPath.c_str(),
-                    configPath.c_str(),
-                    MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH)) {
-                const auto error = GetLastError();
-                std::filesystem::remove(tempPath);
-                Log::ErrorFmt("SaveVrConfig replace error: %lu", error);
-                return;
-            }
-#else
-            std::filesystem::rename(tempPath, configPath);
-#endif
-            g_vrConfigDocument = config;
-            Log::Info("SaveVrConfig success");
-        }
-        catch (const std::exception& e) {
-            Log::ErrorFmt("SaveVrConfig error: %s", e.what());
+            for (const auto& alias : {std::pair{"vrDebugEnabled", "vrDiagnosticsEnabled"},
+                    std::pair{"vrProbeOnly", "vrNativeOnly"}})
+                if (!config.contains(alias.second) && config.contains(alias.first) &&
+                    !config.at(alias.first).is_boolean())
+                    throw std::runtime_error("invalid legacy VR boolean field");
+            ApplyVrConfig(config);
         }
     }
 
-    void LoadVrConfig(
+    bool SaveVrConfig(const std::filesystem::path& configPath) {
+        if (!configWritable) {
+            Log::Error("VR configuration was not initialized successfully; save refused");
+            return false;
+        }
+        try {
+            const auto config = BuildVrConfig();
+            std::string error;
+            if (!WriteVrConfigDocument(configPath, config, true, error)) {
+                Log::ErrorFmt("SaveVrConfig failed: %s", error.c_str());
+                return false;
+            }
+            g_vrConfigDocument = config;
+            Log::Info("SaveVrConfig success");
+            return true;
+        }
+        catch (const std::exception& e) {
+            Log::ErrorFmt("SaveVrConfig error: %s", e.what());
+            return false;
+        }
+    }
+
+    bool InitializeHostedVrConfig(const std::filesystem::path& legacyDirectory,
+        const std::filesystem::path& mixedConfig,
+        const std::filesystem::path& managedConfigRoot,
+        std::filesystem::path& selectedPath, bool& managedLayout,
+        const std::filesystem::path& pluginDataRoot,
+        const std::filesystem::path& logRoot) {
+        configWritable = false;
+        g_vrConfigDocument = nlohmann::json::object();
+        ResetVrConfigFailClosed();
+        VrConfigStartupOptions options;
+        options.legacyDirectory = legacyDirectory;
+        options.mixedConfig = mixedConfig;
+        options.managedConfigRoot = managedConfigRoot;
+        options.releaseDefaults = nlohmann::json::parse(kVrReleaseDefaults);
+        for (auto it = options.releaseDefaults.begin(); it != options.releaseDefaults.end(); ++it)
+            options.knownKeys.push_back(it.key());
+        // Include known serialized fields even when the shipping template omits them.
+        const auto known = BuildVrConfig();
+        for (auto it = known.begin(); it != known.end(); ++it)
+            options.knownKeys.push_back(it.key());
+        options.validate = ValidateCandidate;
+        VrConfigStartupResult result;
+        try {
+            if (!pluginDataRoot.empty()) {
+                VrConfigManagedOptions managed;
+                managed.startup = options;
+                managed.pluginDataRoot = pluginDataRoot;
+                managed.logRoot = logRoot;
+                result = LoadManagedVrConfig(managed);
+                const auto journalPath = pluginDataRoot / L"migrations" / L"layout-v2.json";
+                if (!result.success && std::filesystem::exists(journalPath)) {
+                    std::ifstream input(journalPath, std::ios::binary);
+                    const auto journal = nlohmann::json::parse(input, nullptr, false);
+                    if (journal.is_discarded()) throw std::runtime_error("invalid managed migration journal; fallback refused");
+                    // An explicit tool apply persisted this plan before copying.
+                    // Restart may finish it; it never invents a new old-data move.
+                    result = ApplyVrConfigMigration(managed, journal.at("plan"),
+                        journal.at("planSha256").get<std::string>());
+                } else if (!result.success && result.outcome == "not-managed") {
+                    const auto plan = PlanVrConfigMigration(managed);
+                    const auto action = plan.at("action").get<std::string>();
+                    if (action == "initialize" || action == "adopt-new")
+                        result = ApplyVrConfigMigration(managed, plan, VrConfigPlanHash(plan));
+                    else result = PrepareVrConfig(options); // Existing legacy remains until explicit apply.
+                }
+            } else {
+                const auto standardRoot = mixedConfig.parent_path() / L"PluginData" / L"gaku.vrify";
+                if (std::filesystem::exists(standardRoot / L"active-layout.json") ||
+                    std::filesystem::exists(standardRoot / L"migrations" / L"layout-v2.json"))
+                    throw std::runtime_error("standard VR layout requires Loader paths service; legacy fallback refused");
+                result = PrepareVrConfig(options);
+            }
+        } catch (const std::exception&) {
+            result.success = false;
+            result.outcome = "configuration layout or migration state is invalid; original retained, fallback refused";
+        }
+        if (!result.success) {
+            ResetVrConfigFailClosed();
+            Log::ErrorFmt("VR configuration initialization failed (VR disabled; retry next start): %s",
+                result.outcome.c_str());
+            return false;
+        }
+        ResetVrConfigFailClosed();
+        ApplyVrConfig(result.document);
+        g_vrConfigDocument = result.document;
+        selectedPath = result.configPath;
+        managedLayout = result.managedLayout;
+        configWritable = true;
+        Log::InfoFmt("VR configuration: %s; original data retained", result.outcome.c_str());
+        return true;
+    }
+
+    bool LoadVrConfig(
         const std::filesystem::path& configPath,
         const std::filesystem::path& legacyConfigPath) {
-        if (!std::filesystem::exists(configPath)) {
-            g_vrConfigDocument = nlohmann::json::object();
-            SaveVrConfig(configPath);
-            Log::InfoFmt(
-                "Migrated legacy VR settings from %s to %s",
-                legacyConfigPath.string().c_str(),
-                configPath.string().c_str());
-            return;
-        }
-
+        configWritable = false;
         try {
+            if (!std::filesystem::exists(configPath)) {
+                bool managed = false;
+                std::filesystem::path selected;
+                return InitializeHostedVrConfig(configPath.parent_path(), legacyConfigPath,
+                    {}, selected, managed);
+            }
             std::ifstream in(configPath, std::ios::binary);
             if (!in) {
                 throw std::runtime_error("cannot open dedicated VR config");
             }
             nlohmann::json config;
             in >> config;
-            if (!config.is_object()) {
-                throw std::runtime_error("dedicated VR config root must be an object");
-            }
+            ValidateCandidate(config);
             // A present dedicated file is authoritative. Start from safe VR
             // defaults so omitted keys never bleed through from the legacy
             // localizationConfig.json loaded immediately before this call.
             ResetVrConfigFailClosed();
             ApplyVrConfig(config);
             g_vrConfigDocument = std::move(config);
+            configWritable = true;
             Log::Info("LoadVrConfig success");
+            return true;
         }
         catch (const std::exception& e) {
             ResetVrConfigFailClosed();
             g_vrConfigDocument = nlohmann::json::object();
             Log::ErrorFmt("LoadVrConfig error (VR disabled): %s", e.what());
+            return false;
         }
     }
 }

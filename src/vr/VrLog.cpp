@@ -110,7 +110,8 @@ VrLog::~VrLog() {
 
 bool VrLog::Open(
     const std::filesystem::path& applicationDirectory,
-    bool fileEnabled) {
+    bool fileEnabled,
+    const std::filesystem::path& logDirectory) {
     std::lock_guard lock(mutex_);
 
     if (stream_.is_open()) {
@@ -126,7 +127,8 @@ bool VrLog::Open(
         return true;
     }
 
-    const auto directory = applicationDirectory / L"gakumas-vr" / L"logs";
+    const auto directory = logDirectory.empty() ?
+        applicationDirectory / L"gakumas-vr" / L"logs" : logDirectory;
     std::error_code error;
     std::filesystem::create_directories(directory, error);
     if (error) {

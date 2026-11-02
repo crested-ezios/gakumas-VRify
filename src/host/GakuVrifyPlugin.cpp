@@ -1,4 +1,5 @@
 #include "GakuPlugin.h"
+#include "GakuPaths.h"
 #include "GakuVrifyService.h"
 #include "GakuVrifyDiagnostics.h"
 #include "GakuVrifyUnity.hpp"
@@ -18,6 +19,7 @@ namespace {
 GakuLogService logService{};
 GakuRuntimeService runtimeService{};
 GakuActorEntryService actorService{};
+std::filesystem::path vrLogDirectory;
 std::atomic<bool> activated{false};
 std::atomic<bool> stopping{false};
 std::atomic<bool> runtimeNotified{false};
@@ -91,6 +93,23 @@ template<class T> GakuStatus Query(const GakuHostApi* host, const char* name, T&
     if (result.abiVersion != GAKU_SERVICE_VERSION) return GAKU_E_VERSION;
     if (result.structSize < sizeof(result)) return GAKU_E_SIZE;
     table = result;
+    return GAKU_OK;
+}
+
+GakuStatus PathRoot(const GakuPathsV1& paths, GakuPathKind kind, std::filesystem::path& output) {
+    if (!paths.context || !paths.getRoot || !paths.ensureRoot) return GAKU_E_INVALID_ARGUMENT;
+    uint32_t count = 0;
+    auto status = paths.getRoot(paths.context, kind, nullptr, 0, &count);
+    if (status != GAKU_E_SIZE || count == 0 || count > 32768)
+        return status == GAKU_E_SIZE ? GAKU_E_SIZE : status == GAKU_OK ? GAKU_E_INTERNAL : status;
+    std::vector<wchar_t> buffer(count);
+    uint32_t written = 0;
+    status = paths.getRoot(paths.context, kind, buffer.data(), count, &written);
+    if (status != GAKU_OK) return status;
+    if (written != count || buffer.back() != L'\0') return GAKU_E_INVALID_ARGUMENT;
+    std::filesystem::path root(buffer.data());
+    if (!root.is_absolute()) return GAKU_E_INVALID_ARGUMENT;
+    output = std::move(root);
     return GAKU_OK;
 }
 
@@ -194,10 +213,29 @@ GakuStatus Activate(const GakuHostApi* host, void** state) noexcept {
         ProgramConfigJson = gakumasLocalPath / L"config.json";
         ConfigJson = gakumasLocalPath / L"localizationConfig.json";
         VrConfigJson = gameRoot / L"gakumas-vr" / L"config.json";
-        // No reads/migration of Localify's configuration or translation files.
+        // Read only known VR fields from the same installation's mixed legacy
+        // config, without invoking Localify business or copying its resources.
         GakumasLocal::Config::LoadConfig("{}");
         DisableLocalifyBusiness();
-        GakumasLocal::Config::LoadVrConfig(VrConfigJson, {});
+        GakuPathsV1 paths{};
+        std::filesystem::path configRoot, logRoot, pluginDataRoot;
+        const auto pathStatus = Query(host, GAKU_SERVICE_PATHS, paths);
+        bool rootsReady = pathStatus == GAKU_E_UNAVAILABLE;
+        if (pathStatus == GAKU_OK)
+            rootsReady = PathRoot(paths, GAKU_PATH_CONFIGS, configRoot) == GAKU_OK &&
+                PathRoot(paths, GAKU_PATH_LOGS, logRoot) == GAKU_OK &&
+                PathRoot(paths, GAKU_PATH_PLUGIN_DATA, pluginDataRoot) == GAKU_OK;
+        bool managedLayout = false;
+        if (rootsReady) {
+            GakumasLocal::Config::InitializeHostedVrConfig(gameRoot / L"gakumas-vr", ConfigJson,
+                configRoot, VrConfigJson, managedLayout, pluginDataRoot, logRoot);
+            vrLogDirectory = managedLayout ? logRoot : std::filesystem::path{};
+        } else {
+            Log(GAKU_LOG_ERROR, "VR paths service failed; configuration unchanged and VR disabled");
+            // A host may retry an activation that failed later in registration.
+            // Do not let previous VR globals become this attempt's startup decision.
+            return GAKU_E_UNAVAILABLE;
+        }
         DisableLocalifyBusiness();
         GakumasLocal::Config::vrRuntimeStartupEnabled = GakumasLocal::Config::vrEnabled;
         GakumasLocal::Config::vrDiagnosticsStartupEnabled =
@@ -222,7 +260,7 @@ GakuStatus Activate(const GakuHostApi* host, void** state) noexcept {
         *state = &activated;
         Log(GAKU_LOG_INFO, GakumasLocal::Config::vrEnabled ?
             "GakuVRify activated; waiting for runtime-ready (Localify business disabled)" :
-            "GakuVRify activated with VR disabled; edit gakumas-vr/config.json and restart");
+            "GakuVRify activated with VR disabled; check the selected VR config or initialization error and restart");
         return GAKU_OK;
     } catch (const std::exception& e) {
         Log(GAKU_LOG_ERROR, e.what());
@@ -271,6 +309,7 @@ void RuntimeReady(void*) noexcept {
         config.stereoLandscapeOnly = GakumasLocal::Config::vrStereoLandscapeOnly;
         config.stereoRenderScale = GakumasLocal::Config::vrStereoRenderScale;
         config.applicationDirectory = runtimeService.gameRoot;
+        config.logDirectory = vrLogDirectory;
         config.statusSink = RuntimeStatus;
         gakumas::vr::HookRegistrar registrar{nullptr, Install, Batch};
         if (!gakumas::vr::StartVrRuntime(std::move(config), registrar)) {
