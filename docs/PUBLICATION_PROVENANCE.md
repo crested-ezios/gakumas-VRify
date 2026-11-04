@@ -88,3 +88,12 @@ component notices and migration protocol. It does not import internal handoffs,
 raw logs, dependency caches or the separate historical private candidate's review
 metadata. `SOURCE_MANIFEST.json` maps this maintenance projection and its public
 adaptations to the prior staged checkpoint.
+
+## Null camera-target maintenance
+
+The camera-target selection fix projects only source checkpoint `b6fe8ac`'s
+hosted consumer changes and regression, with the test adapted to the included
+public SDK. The prior staged checkpoint's source pipeline, compiler selection,
+SDK and dependency locks remain intact. See [the maintenance note](CAMERA_NULL_PROVIDER_20261104.md)
+for the ownership rules and limited desktop acceptance evidence. This selection
+does not import unrelated source history, internal logs or prototype features.

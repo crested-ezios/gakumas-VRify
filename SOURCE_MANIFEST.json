@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
   "component": "GakuVRify",
-  "sourceCommit": "3d51912ba73307e078473603b70588ab8b631686",
-  "sourcePatchBase": "e6b17a21c94b30e2d94a925b5dcb45c742f19b26",
-  "stageBaseline": "ce7cdba63f352bea230bf5beb3adcfc336720264",
+  "sourceCommit": "b6fe8ac5ac8d025460699b79a2db06c08a957ec4",
+  "sourcePatchBase": "3d51912ba73307e078473603b70588ab8b631686",
+  "stageBaseline": "e724db2ca2f0abd1db48aabde9a24a3f4387f793",
   "loaderSdkCommit": "ed5ad70819907c0a0f5acc25e804b0aea205fa57",
   "previousSourceManifest": {
-    "commit": "ce7cdba63f352bea230bf5beb3adcfc336720264",
+    "commit": "e724db2ca2f0abd1db48aabde9a24a3f4387f793",
     "path": "SOURCE_MANIFEST.json",
-    "sha256": "599ff151db95f97e57d580c914cbc596f3c4dee7c6fc975a60b6a05bb73e3da3"
+    "sha256": "3f46988ed0a744e355f02f0c81a6cdbe06d8ec71c7d77b5dfbdb0f5fc32ee3b1"
   },
   "adaptations": [
     "Apply the reviewed dual-mode maintenance source without changing the pinned upstream or patch layer.",
@@ -16,7 +16,8 @@
     "Merge maintenance and configuration-selection instructions into the existing public product documentation.",
     "Keep the existing appearance-service fixture stub and add file-drop stubs plus the unavailable-warning retry assertion.",
     "Refresh only public SDK declarations from the frozen compatible Loader checkpoint; retain the complete SDK MIT notice.",
-    "Do not import internal handoffs, caches, logs, user resources or private-candidate metadata; final staged validation is recorded externally."
+    "Do not import internal handoffs, caches, logs, user resources or private-candidate metadata; final staged validation is recorded externally.",
+    "Project only the reviewed null camera-target fix from b6fe8ac; use the included public SDK in its regression, retain existing staging adaptations and unrelated changes."
   ],
   "sdkHeaders": [
     {
@@ -69,8 +70,8 @@
     },
     {
       "path": "docs/PUBLICATION_PROVENANCE.md",
-      "baselineSha256": "076f4a09da8508ab834c150036ed7d1bfcab6c1a3e8211281d0e79cde3027ec2",
-      "sha256": "8d83dc3dd69a3b04299e7fbc413b01deb2651f5ae75105072a8339d7f67a9be4",
+      "baselineSha256": "8d83dc3dd69a3b04299e7fbc413b01deb2651f5ae75105072a8339d7f67a9be4",
+      "sha256": "3a54364f3f0c740d6831e8a9332e321d69d077296cb73c6f2dac5fe01816819d",
       "mode": "stage-public-provenance"
     },
     {
@@ -174,6 +175,46 @@
       "sha256": "94d05bc74999a61daea347826ade2e7dd8359c6879a0071d41be1d095f576495",
       "sourceSha256": "94d05bc74999a61daea347826ade2e7dd8359c6879a0071d41be1d095f576495",
       "mode": "exact-source"
+    },
+    {
+      "path": "src/host/GakuVrifyUnity.hpp",
+      "baselineSha256": "8095693cf01582f98cde9a389e36697955f3a567761e59dc10b7fbf8f99c18e3",
+      "sha256": "68f67747938fd7129e588b7dd3b606ceeb65656cfe74270ab12ac6174c666895",
+      "sourceSha256": "68f67747938fd7129e588b7dd3b606ceeb65656cfe74270ab12ac6174c666895",
+      "mode": "exact-source"
+    },
+    {
+      "path": "src/vr/unity/HostedUnity.inc.cpp",
+      "baselineSha256": "bf8dfb0cd3259a0d2788b6413c27c455cb060f7256604d1118ffdb39829378ac",
+      "sha256": "4cabd22f43e6fbdb9ac617e2aca3782d383e6642d73bfb6d491bdf6a987057eb",
+      "sourceSha256": "4cabd22f43e6fbdb9ac617e2aca3782d383e6642d73bfb6d491bdf6a987057eb",
+      "mode": "exact-source"
+    },
+    {
+      "path": "tests/test-shared-camera-targets.py",
+      "sha256": "4b36a9d13b7fcf0343846dd00796e06045a5583fb702b14b9c0758db1422eba6",
+      "sourceSha256": "30010712e0f46252282b142d3e6ef1582f4162ddce2eaf24d2390133b0be5777",
+      "mode": "stage-adapted-public-test"
+    },
+    {
+      "path": "docs/CAMERA_NULL_PROVIDER_20261104.md",
+      "sha256": "0aad59dfdacc03f27a1ba6696900b44872b80df9267b969c01475f19c8213660",
+      "sourceSha256": "de140ceca7e409703ad1f5d2b74af2b6e23dfc38e5780d1cddeef1d8c6693fec",
+      "mode": "stage-public-provenance"
     }
-  ]
+  ],
+  "selectiveProjection": {
+    "sourceCommit": "b6fe8ac5ac8d025460699b79a2db06c08a957ec4",
+    "stageBaseline": "e724db2ca2f0abd1db48aabde9a24a3f4387f793",
+    "paths": [
+      "src/host/GakuVrifyUnity.hpp",
+      "src/vr/unity/HostedUnity.inc.cpp",
+      "tests/test-shared-camera-targets.py",
+      "docs/CAMERA_NULL_PROVIDER_20261104.md",
+      "docs/PUBLICATION_PROVENANCE.md"
+    ],
+    "scope": "Null/partial hosted camera-target ownership only; no new ABI, dependency, prototype or unrelated source history.",
+    "runtimeSourceExact": true,
+    "userAcceptanceScope": "Reported desktop game camera recovery for the paired inventory build; staged binaries and active XR retain separate validation."
+  }
 }

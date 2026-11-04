@@ -12,6 +12,7 @@ GakuHostApi cameraHost{};
 GakuLocalifyCameraRenderService sharedCamera{};
 bool sharedCameraSelected = false;
 bool sharedCameraValid = false;
+bool sharedCameraTargetMismatch = false;
 bool sharedCameraTargets[GAKULOCALIFY_CAMERA_RENDER_COUNT]{};
 std::atomic<bool> sharedCameraConnected{false};
 unsigned char sharedCameraUser{};
@@ -59,20 +60,25 @@ void ConfigureSharedCameraHost(const GakuHostApi* host) noexcept {
 bool UseSharedCameraTarget(uint32_t kind, void* resolvedTarget) {
     if (!sharedCameraSelected) return false;
     if (kind >= GAKULOCALIFY_CAMERA_RENDER_COUNT) return true;
-    const auto installed = sharedCameraValid ?
-        sharedCamera.getTarget(sharedCamera.context, kind) : nullptr;
+    // A published service need not own every target (e.g. Localify camera
+    // hooks disabled). Only non-null exact targets waive our exclusive lease.
+    if (!sharedCameraValid) return true;
+    const auto installed = sharedCamera.getTarget(sharedCamera.context, kind);
     sharedCameraTargets[kind] = resolvedTarget && installed == resolvedTarget;
     GakumasLocal::Log::InfoFmt("VRIFY_SHARED_CAMERA target kind=%u ready=%d provider=%p expected=%p",
         kind, sharedCameraTargets[kind], installed, resolvedTarget);
-    // Selected but unavailable/mismatching providers must fail initialization,
-    // never retry the same target through an exclusive hook lease.
+    if (!installed) return false;
+    if (!sharedCameraTargets[kind]) sharedCameraTargetMismatch = true;
+    // Non-null mismatches remain fail-closed; never acquire a competing lease.
     return true;
 }
 
 bool ConnectSharedCameraRender() {
     if (!sharedCameraSelected) return true;
-    if (!sharedCameraValid) return false;
-    for (const auto ready : sharedCameraTargets) if (!ready) return false;
+    if (!sharedCameraValid || sharedCameraTargetMismatch) return false;
+    bool anyShared = false;
+    for (const auto ready : sharedCameraTargets) anyShared |= ready;
+    if (!anyShared) return true;
     const GakuLocalifyCameraRenderCallbacks callbacks{
         GAKULOCALIFY_CAMERA_RENDER_VERSION, sizeof(GakuLocalifyCameraRenderCallbacks), &sharedCameraUser,
         [](void*) -> uint32_t {

@@ -11,8 +11,10 @@ namespace GakumasVR::Hosted {
 bool InitializeUnity();
 #ifdef GAKU_VRIFY_HOSTED
 // Optional, provider-owned bridge for exactly three known game entries. An
-// absent provider keeps VRify's independent hook path; an incompatible provider
-// or target mismatch never falls through to a competing detour acquisition.
+// absent provider or null target keeps VRify's independent hook path; only an
+// exact non-null provider target waives that target's exclusive hook lease.
+// An incompatible provider or non-null mismatch never falls through to a
+// competing detour acquisition.
 void ConfigureSharedCameraHost(const GakuHostApi* host) noexcept;
 bool UseSharedCameraTarget(uint32_t kind, void* resolvedTarget);
 bool ConnectSharedCameraRender();
