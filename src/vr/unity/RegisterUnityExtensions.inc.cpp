@@ -1136,7 +1136,4 @@
         }
 #endif
 
-        #ifndef GAKU_VRIFY_HOSTED
-        GakumasLocal::ModLoader::DispatchUnityReady();
-        #endif
     }

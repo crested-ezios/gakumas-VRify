@@ -97,6 +97,17 @@ tool/example, and preserves active config, PluginData state and all old original
 It is not a reverse data migration. Do not treat retained old data as synchronized
 settings after the new layout has been used.
 
+## Choosing settings for Standalone
+
+The original Standalone VRify proxy reads `gakumas-vr/config.json`; it does not
+read `Configs/gaku.vrify/config.json` or the Loader's active-layout record. To
+retain settings changed after managed activation, close the game, back up both
+files, and explicitly copy the selected managed VR config to the legacy path
+before replacing the proxy. Keep the managed config and PluginData records;
+Standalone saves do not update them. This manual file selection requires no
+reverse-migration engine or Loader service. See the complete
+[Standalone return steps](../BUILDING.md#returning-from-plugin-to-standalone).
+
 ## Verification boundaries
 
 Synthetic tests inject interruptions at durable phases, source/target races,

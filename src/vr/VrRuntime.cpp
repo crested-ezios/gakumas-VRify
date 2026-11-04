@@ -1950,8 +1950,10 @@ void VrRuntime::Fault(std::string_view reason) {
 
 void VrRuntime::Unavailable(VrUnavailableReason reason) {
     const auto previous = unavailableReason_.exchange(reason);
-    const auto state = state_.exchange(VrRuntimeState::Unavailable, std::memory_order_acq_rel);
-    if (previous != reason || state != VrRuntimeState::Unavailable) {
+    state_.store(VrRuntimeState::Unavailable, std::memory_order_release);
+    // A retry temporarily reports WaitingForRuntime. Notify only when the
+    // reason changes; successful initialization clears it before a later loss.
+    if (previous != reason) {
         const auto message = std::string("VR unavailable: ") + VrUnavailableReasonName(reason);
         log_.Write(std::string("[VR][runtime] ") + message);
         WriteVrConsole(message);

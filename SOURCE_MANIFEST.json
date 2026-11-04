@@ -1,224 +1,178 @@
 {
   "schemaVersion": 1,
   "component": "GakuVRify",
-  "sourceCommit": "e6b17a21c94b30e2d94a925b5dcb45c742f19b26",
-  "sourcePatchBase": "4d9b684499aeb9040736852b02ab4f9a2d6d84fc",
-  "stageBaseline": "e22d1429c9e3fa06a43d44b80fd3f4c0fbb41885",
-  "loaderSdkCommit": "0426648bd0601486347513af200aa4167a9fa09c",
+  "sourceCommit": "3d51912ba73307e078473603b70588ab8b631686",
+  "sourcePatchBase": "e6b17a21c94b30e2d94a925b5dcb45c742f19b26",
+  "stageBaseline": "ce7cdba63f352bea230bf5beb3adcfc336720264",
+  "loaderSdkCommit": "ed5ad70819907c0a0f5acc25e804b0aea205fa57",
+  "previousSourceManifest": {
+    "commit": "ce7cdba63f352bea230bf5beb3adcfc336720264",
+    "path": "SOURCE_MANIFEST.json",
+    "sha256": "599ff151db95f97e57d580c914cbc596f3c4dee7c6fc975a60b6a05bb73e3da3"
+  },
   "adaptations": [
-    "Preserve in-repository sdk/gakuloader defaults and SDK license packaging.",
-    "Preserve stage MSVC selection/offline dependency-cache build entry.",
-    "Keep plugin README positioning and camera compatibility boundaries; update configuration/migration instructions.",
-    "Offline package switch refuses a missing or invalid pinned loader archive.",
-    "Do not import internal handoffs, caches, logs or user resources."
+    "Apply the reviewed dual-mode maintenance source without changing the pinned upstream or patch layer.",
+    "Preserve the in-repository public SDK default, MSVC selection, offline build and package/install protocols.",
+    "Merge maintenance and configuration-selection instructions into the existing public product documentation.",
+    "Keep the existing appearance-service fixture stub and add file-drop stubs plus the unavailable-warning retry assertion.",
+    "Refresh only public SDK declarations from the frozen compatible Loader checkpoint; retain the complete SDK MIT notice.",
+    "Do not import internal handoffs, caches, logs, user resources or private-candidate metadata; final staged validation is recorded externally."
   ],
   "sdkHeaders": [
     {
       "path": "sdk/gakuloader/GakuPlugin.h",
-      "sha256": "c02e006180e464a770bd31df52e89f5d539ceaaf4978f4e056734b5a5ca00abd"
+      "sha256": "12f4e4db22ff0505990b66cfeaf97b1cae54486c9eb415e7efc3adfd9984867e"
     },
     {
       "path": "sdk/gakuloader/GakuPaths.h",
       "sha256": "a1182d4903c642299fe28e3687a46ac23c19dfdb40e47a83e84da7af52865ea3"
     }
   ],
+  "excludedSourceEvidence": [
+    {
+      "path": "docs/DUAL_MODE_VALIDATION_20261103.md",
+      "reason": "Inventory artifact evidence is retained at its source; final staged validation binds the staged commit separately."
+    }
+  ],
   "files": [
     {
       "path": "BUILDING.md",
-      "baselineSha256": "6514ba45fc28a661d483a5a25805d10b79da306ab1715c5ede8cd0a6bd582789",
-      "sha256": "b2fe8ce6c2544d084f32ef175f2d692664e165ee3880896d9987fd1baa9bd4a9",
-      "mode": "preserved-stage-product-docs-updated"
-    },
-    {
-      "path": "README.ja.md",
-      "baselineSha256": "2bba29d3d65739a444067ce1d92d56b0333328588846f0a6435edaf277cb57ce",
-      "sha256": "9e794195bb7a1bb56ab9021c7d890f6cf4fb14287817e56567ecbe814866f873",
-      "mode": "preserved-stage-product-docs-updated"
-    },
-    {
-      "path": "README.md",
-      "baselineSha256": "f1950fdb867c50e1ede465bc19d3057df818b5e2dd6df444e6830a3e5c526aec",
-      "sha256": "96cce198cb998c92d31a8a7dc99c632851c6cdd753788c24856418e253dfc2be",
-      "mode": "preserved-stage-product-docs-updated"
-    },
-    {
-      "path": "README.zh-CN.md",
-      "baselineSha256": "315ac71a4ee1af5a4e65a2317b607eaa60e1a2b64b8969a9a70b4391fcf5c58c",
-      "sha256": "d9f6455663d35f1e3cc091511ca06912010bfd9fb1ed267a4532fdf46a75b3ea",
-      "mode": "preserved-stage-product-docs-updated"
-    },
-    {
-      "path": "README.zh-TW.md",
-      "baselineSha256": "8d6f04e883ccf42de0adace5a8654003712814381fc2e145720920839983f809",
-      "sha256": "50911bbae617942fa192c324c55a1e3b0fe9fe35c3d9053b02112a6b8db86c1e",
-      "mode": "preserved-stage-product-docs-updated"
-    },
-    {
-      "path": "THIRD_PARTY_NOTICES.md",
-      "baselineSha256": "8d25cd240d5fd075bba371381c4ebb7b4233428df22c801211df26f7b234ab7c",
-      "sha256": "fada6a57bf76b734d2f2dda198973745871b60613b59bfbbe32b32f758ac7d21",
-      "mode": "preserved-stage-product-docs-updated"
+      "baselineSha256": "b2fe8ce6c2544d084f32ef175f2d692664e165ee3880896d9987fd1baa9bd4a9",
+      "sourceBaselineSha256": "bf1d4eae372219743a85438d0bad8e85f1b1b5ab5e9f2a35526504aa7b162276",
+      "sha256": "0f69fe03c2c5dedef006ff64ce20def7ce7c1910a9a5116579e76630c386d32c",
+      "sourceSha256": "347ac9aafc558ef5e1144656b421c021ff21bd43f68431847b03a160256a3076",
+      "mode": "stage-adapted"
     },
     {
       "path": "docs/CONFIG_LAYOUT_20261102.md",
-      "sourceSha256": "8fe48df8aad82274e043f9f8b2849f0a9bfedc030479b01fd400b2cfa74fae69",
-      "sha256": "7d8386df8ed9a65ecf43c00a128a23b99a24dd63ada22221d2b39fc165d4128b",
+      "baselineSha256": "7d8386df8ed9a65ecf43c00a128a23b99a24dd63ada22221d2b39fc165d4128b",
+      "sourceBaselineSha256": "8fe48df8aad82274e043f9f8b2849f0a9bfedc030479b01fd400b2cfa74fae69",
+      "sha256": "1775865d92f30076a0ab5fa83d03e17f52462a5d44f830034e2304b059b02f9c",
+      "sourceSha256": "17c1243c6d759879f68c52c79bda5ba1e5866e7f1217a61a12c69b169c1756ea",
       "mode": "stage-adapted"
     },
     {
       "path": "docs/CONFIG_MIGRATION_V2_20261102.md",
-      "sourceSha256": "d884a408ee26aaf2fa82dca298d405065b90387ca278fcd02f54e6af51ba4d62",
-      "sha256": "260c3c199a803fafbace23ff72bb2ba079c9216d398328031dd8946120fd4a3f",
+      "baselineSha256": "260c3c199a803fafbace23ff72bb2ba079c9216d398328031dd8946120fd4a3f",
+      "sourceBaselineSha256": "d884a408ee26aaf2fa82dca298d405065b90387ca278fcd02f54e6af51ba4d62",
+      "sha256": "39f1588bd53d0cac32da59d7877544afe56d765536ac23e157cfc8107808ca74",
+      "sourceSha256": "aeffd922d8a3f5d1d34f997fcbe84f1dca8183adf18f91f1bef1201a19aa51ce",
       "mode": "stage-adapted"
     },
     {
       "path": "docs/GAKULOADER_PLUGIN.md",
-      "baselineSha256": "23099269265c169e7431ccbcdc1f87e8537291aa76557148df7cc8c27d621d22",
-      "sha256": "5d819a983937bf283ce55768819e26417ba69d181535f117253b918d2fa95aaf",
-      "mode": "preserved-stage-product-docs-updated"
-    },
-    {
-      "path": "install-plugin.ps1",
-      "sourceSha256": "f57f4353f5b07c377569994a75d55ad6fad0d2fc687cdae5c381e8ddde39e047",
-      "sha256": "df01aad582cd0e75b0fb8b7b89b329d9b87442141e36236b55f91de9bc0864ef",
+      "baselineSha256": "5d819a983937bf283ce55768819e26417ba69d181535f117253b918d2fa95aaf",
+      "sourceBaselineSha256": "19372b47444874d52ff650480c790fbacce722c725e0868d341299bccb6ec3a0",
+      "sha256": "5677c6637ca2ac5b6d9b7814057f63d5c19c4974ec04f7b72a036e914472687c",
+      "sourceSha256": "b4b7c370f38a349cbed85566bd04548a075ce6b599ee0fb002c0df9f46c41772",
       "mode": "stage-adapted"
     },
     {
-      "path": "package-plugin.ps1",
-      "sourceSha256": "cc9b59dc96596a92896873ce0517aca2dfcc0e1debc41a9367517733f2a9fcfd",
-      "sha256": "d8d42e1f5949561ebceed40fc497da775b6e65d6102b8ac44d4f969e8ddb27d3",
-      "mode": "stage-adapted"
+      "path": "docs/PUBLICATION_PROVENANCE.md",
+      "baselineSha256": "076f4a09da8508ab834c150036ed7d1bfcab6c1a3e8211281d0e79cde3027ec2",
+      "sha256": "8d83dc3dd69a3b04299e7fbc413b01deb2651f5ae75105072a8339d7f67a9be4",
+      "mode": "stage-public-provenance"
     },
     {
       "path": "scripts/CMakeLists.txt",
-      "sourceSha256": "0d9c91951e93ff09f483963919854d0cd62b5e5f25090e65a138d74f51afaea2",
-      "sha256": "d74a2c9327826ff760b6aaae26a63ac39b949791f83de9c61964ee9c17753c10",
+      "baselineSha256": "d74a2c9327826ff760b6aaae26a63ac39b949791f83de9c61964ee9c17753c10",
+      "sourceBaselineSha256": "0d9c91951e93ff09f483963919854d0cd62b5e5f25090e65a138d74f51afaea2",
+      "sha256": "71f98090f4682f118fc01ca9c1bbab8f482d3c40115b4df44844f71f7aa31804",
+      "sourceSha256": "22dc81d583810fe0eed13ee4f5d2f3b691283d2a9d7654af0f4ebb4d32635147",
       "mode": "stage-adapted"
     },
     {
-      "path": "scripts/source-pipeline.py",
-      "sourceSha256": "696e81bf8810d6c07ef240af80444fc51e9086a2e7d48688b74a2bc3a7d58020",
-      "sha256": "696e81bf8810d6c07ef240af80444fc51e9086a2e7d48688b74a2bc3a7d58020",
-      "mode": "exact-source"
+      "path": "sdk/gakuloader/GakuPlugin.h",
+      "baselineSha256": "c02e006180e464a770bd31df52e89f5d539ceaaf4978f4e056734b5a5ca00abd",
+      "sha256": "12f4e4db22ff0505990b66cfeaf97b1cae54486c9eb415e7efc3adfd9984867e",
+      "mode": "public-sdk-refresh",
+      "sdkSourceCommit": "ed5ad70819907c0a0f5acc25e804b0aea205fa57"
     },
     {
       "path": "sdk/gakuloader/PROVENANCE.md",
-      "baselineSha256": "43fa3696046d02adb074021ee651fafb20cb4a815c2264427513d02e07629390",
-      "sha256": "09f67434fb7f27276b32b54249f3828abdaaa06f4de57e05f1aa4910b29f6b52",
-      "mode": "preserved-stage-product-docs-updated"
+      "baselineSha256": "09f67434fb7f27276b32b54249f3828abdaaa06f4de57e05f1aa4910b29f6b52",
+      "sha256": "549a484146644ebf81adc74f43a70256129d620737c2178af38c6e9fc6a34bc1",
+      "mode": "stage-public-provenance"
     },
     {
-      "path": "src/host/ConfigMigrationTool.cpp",
-      "sourceSha256": "96decc3d27540052f31b9313cfdf6e691e218a87a196b0f15949a16f2f7c3bac",
-      "sha256": "96decc3d27540052f31b9313cfdf6e691e218a87a196b0f15949a16f2f7c3bac",
+      "path": "src/host/VrWindowsPlatform.cpp",
+      "baselineSha256": "422fadcfc4e6e964dca412cc742f87f4e50ab19883be06c1189716660e76a0d6",
+      "sourceBaselineSha256": "422fadcfc4e6e964dca412cc742f87f4e50ab19883be06c1189716660e76a0d6",
+      "sha256": "e3ee6ded404586cfcb607d2f70ae088556c02cede13d9acf8e07d0dac5853f05",
+      "sourceSha256": "e3ee6ded404586cfcb607d2f70ae088556c02cede13d9acf8e07d0dac5853f05",
       "mode": "exact-source"
     },
     {
-      "path": "src/host/GakuVrifyPlugin.cpp",
-      "sourceSha256": "7e6d16b13aa587ea67c40c1769b6cd23da180adf968f180cd62bd0b401ba7c3d",
-      "sha256": "7e6d16b13aa587ea67c40c1769b6cd23da180adf968f180cd62bd0b401ba7c3d",
-      "mode": "exact-source"
+      "path": "src/host/localify/GakumasModPlugin.h",
+      "baselineSha256": "e7ca2f0d04d7184c444c590c5eb0be712c768a096b0a9f4ae4abd5dd8479cfd8",
+      "sourceBaselineSha256": "e7ca2f0d04d7184c444c590c5eb0be712c768a096b0a9f4ae4abd5dd8479cfd8",
+      "mode": "deleted-exact-source",
+      "deleted": true
     },
     {
-      "path": "src/vr/VrLog.cpp",
-      "sourceSha256": "c8bde6b2c2403d899825c854071b6f67e18946615abb8b4b2ee741b0b1f30dfe",
-      "sha256": "c8bde6b2c2403d899825c854071b6f67e18946615abb8b4b2ee741b0b1f30dfe",
-      "mode": "exact-source"
+      "path": "src/host/localify/ModLoader.cpp",
+      "baselineSha256": "3d3f97218c607747fb3df96cfd871547b839102d04b83e6ea89f5dbe52989e09",
+      "sourceBaselineSha256": "3d3f97218c607747fb3df96cfd871547b839102d04b83e6ea89f5dbe52989e09",
+      "mode": "deleted-exact-source",
+      "deleted": true
     },
     {
-      "path": "src/vr/VrLog.hpp",
-      "sourceSha256": "a603d6f461780344e648f57bbae0e5028ea233f3bc45f3b1ccbfeff1e9b865dd",
-      "sha256": "a603d6f461780344e648f57bbae0e5028ea233f3bc45f3b1ccbfeff1e9b865dd",
+      "path": "src/host/localify/ModLoader.hpp",
+      "baselineSha256": "04c97a198accac9fe0c49527e14f1e53bdaa6e28144aa836dfd4c6f6cd331fcc",
+      "sourceBaselineSha256": "04c97a198accac9fe0c49527e14f1e53bdaa6e28144aa836dfd4c6f6cd331fcc",
+      "mode": "deleted-exact-source",
+      "deleted": true
+    },
+    {
+      "path": "src/host/localify/UnityIntegration.hpp",
+      "baselineSha256": "d1003f7ebc003cf39664028282e0d64a3bb4fc58e02e4fd2d76315ba90eb3ca0",
+      "sourceBaselineSha256": "d1003f7ebc003cf39664028282e0d64a3bb4fc58e02e4fd2d76315ba90eb3ca0",
+      "sha256": "b488955574ea564c3387eff292034fd894fb1f399c16f371b97c4789b4c571a6",
+      "sourceSha256": "b488955574ea564c3387eff292034fd894fb1f399c16f371b97c4789b4c571a6",
       "mode": "exact-source"
     },
     {
       "path": "src/vr/VrRuntime.cpp",
-      "sourceSha256": "d077493174a53343b0916230b3794dd0fcebbb387be22bbeb0b4f275533239c0",
-      "sha256": "d077493174a53343b0916230b3794dd0fcebbb387be22bbeb0b4f275533239c0",
+      "baselineSha256": "d077493174a53343b0916230b3794dd0fcebbb387be22bbeb0b4f275533239c0",
+      "sourceBaselineSha256": "d077493174a53343b0916230b3794dd0fcebbb387be22bbeb0b4f275533239c0",
+      "sha256": "c002d320547767632547a3b483111b441542e6abaed143818fa9af7ac12716c0",
+      "sourceSha256": "c002d320547767632547a3b483111b441542e6abaed143818fa9af7ac12716c0",
       "mode": "exact-source"
     },
     {
-      "path": "src/vr/VrRuntime.hpp",
-      "sourceSha256": "25cdd1ef61398e25a1ba8af25fb73091689d18b403e5536c80b106fd4a3a2ed8",
-      "sha256": "25cdd1ef61398e25a1ba8af25fb73091689d18b403e5536c80b106fd4a3a2ed8",
+      "path": "src/vr/unity/ActorLateUpdateScope.inc.cpp",
+      "baselineSha256": "dc6254bf82cdb392f4c4ce6d4ded4826841113e448c4f7b773767a715cbcdad9",
+      "sourceBaselineSha256": "dc6254bf82cdb392f4c4ce6d4ded4826841113e448c4f7b773767a715cbcdad9",
+      "sha256": "5a439d8b8a5fa2018475cc29b2b3d507f9420e8c3a6f8cc65a2441e7b5a0dd4b",
+      "sourceSha256": "5a439d8b8a5fa2018475cc29b2b3d507f9420e8c3a6f8cc65a2441e7b5a0dd4b",
       "mode": "exact-source"
     },
     {
-      "path": "src/vr/config/VrConfigStartup.cpp",
-      "sourceSha256": "20bec01a5c270a19c54ef11e5daac6d41056d2249c1de7f21d5ce07354f2c70f",
-      "sha256": "20bec01a5c270a19c54ef11e5daac6d41056d2249c1de7f21d5ce07354f2c70f",
+      "path": "src/vr/unity/RegisterUnityExtensions.inc.cpp",
+      "baselineSha256": "73fbceb345c30e339ebf5924363ffa9e813cb76dbd75f9e0625eb03cf2265991",
+      "sourceBaselineSha256": "73fbceb345c30e339ebf5924363ffa9e813cb76dbd75f9e0625eb03cf2265991",
+      "sha256": "91fe434f24c94f63828e84bcbce42e7cc11960e0301579cc360e77b16eaf3c9a",
+      "sourceSha256": "91fe434f24c94f63828e84bcbce42e7cc11960e0301579cc360e77b16eaf3c9a",
       "mode": "exact-source"
     },
     {
-      "path": "src/vr/config/VrConfigStartup.hpp",
-      "sourceSha256": "a958a2e07ab6c16069be3bbaea00eb77e9e9275463fd9409378355e21b3aaa8a",
-      "sha256": "a958a2e07ab6c16069be3bbaea00eb77e9e9275463fd9409378355e21b3aaa8a",
+      "path": "tests/test-standalone-smoke.ps1",
+      "sha256": "7f559b74a3809248679b8d831046d311c2852d43dacefbfb4df3b75195e62d0f",
+      "sourceSha256": "7f559b74a3809248679b8d831046d311c2852d43dacefbfb4df3b75195e62d0f",
       "mode": "exact-source"
     },
     {
-      "path": "src/vr/config/VrifyConfig.cpp",
-      "sourceSha256": "87b762eb7eab8b52eb31e205edaefde4d7ad89b814f5469556dca17cd2105557",
-      "sha256": "87b762eb7eab8b52eb31e205edaefde4d7ad89b814f5469556dca17cd2105557",
+      "path": "tests/vrless/StandaloneSmoke.cpp",
+      "sha256": "f5661ca1f2d78d32366d0873aaa8d77d9e92b88e871ca4c7d71b88cac9596d43",
+      "sourceSha256": "f5661ca1f2d78d32366d0873aaa8d77d9e92b88e871ca4c7d71b88cac9596d43",
       "mode": "exact-source"
     },
     {
-      "path": "src/vr/config/VrifyConfig.hpp",
-      "sourceSha256": "b3ac3655f90f7ebcf349738cbc0bfa67443f7421cdda2fc0b618a4dce9a833b8",
-      "sha256": "b3ac3655f90f7ebcf349738cbc0bfa67443f7421cdda2fc0b618a4dce9a833b8",
-      "mode": "exact-source"
-    },
-    {
-      "path": "tests/cpp/config_migration_tests.cpp",
-      "sourceSha256": "6e5e1e93c3dfd0fd0e2fa57dfd405bb657e449a0ad833c35a3ca69ee1b30b47f",
-      "sha256": "6e5e1e93c3dfd0fd0e2fa57dfd405bb657e449a0ad833c35a3ca69ee1b30b47f",
-      "mode": "exact-source"
-    },
-    {
-      "path": "tests/cpp/config_startup_tests.cpp",
-      "sourceSha256": "2f00c03ed459e9277aeb6de69aeffdb7c7307a33c3ecbe060b40922efbe28a23",
-      "sha256": "2f00c03ed459e9277aeb6de69aeffdb7c7307a33c3ecbe060b40922efbe28a23",
-      "mode": "exact-source"
-    },
-    {
-      "path": "tests/cpp/hosted_plugin_tests.cpp",
-      "sourceSha256": "e0b4c440217fca7aef61d87c3d5657ec5a4d9a12647138bde6b3af2502b97386",
-      "sha256": "e0b4c440217fca7aef61d87c3d5657ec5a4d9a12647138bde6b3af2502b97386",
-      "mode": "exact-source"
-    },
-    {
-      "path": "tests/source_pipeline_tests.py",
-      "sourceSha256": "68c3b25d3a875be80982c330607b9a5f439f64b20337a5fa045868c1eb2225d3",
-      "sha256": "68c3b25d3a875be80982c330607b9a5f439f64b20337a5fa045868c1eb2225d3",
-      "mode": "exact-source"
-    },
-    {
-      "path": "tests/test-config-migration-tool.ps1",
-      "sourceSha256": "f21952f94da98ea094e70f3b03b1a96a391741cb2f4c8e8e36832530995fc187",
-      "sha256": "f21952f94da98ea094e70f3b03b1a96a391741cb2f4c8e8e36832530995fc187",
-      "mode": "exact-source"
-    },
-    {
-      "path": "tests/test-config-migration.ps1",
-      "sourceSha256": "61745aaab56ab55bc3215c9006d8a8b881587aef72b258ffe7a4ec9921f7fee8",
-      "sha256": "61745aaab56ab55bc3215c9006d8a8b881587aef72b258ffe7a4ec9921f7fee8",
-      "mode": "exact-source"
-    },
-    {
-      "path": "tests/test-config-startup.ps1",
-      "sourceSha256": "cb192f416de46df2c9b3f09982c07e85e24ada052707dba507d81e3916e55f26",
-      "sha256": "cb192f416de46df2c9b3f09982c07e85e24ada052707dba507d81e3916e55f26",
-      "mode": "exact-source"
-    },
-    {
-      "path": "tests/test-hosted-plugin.ps1",
-      "sourceSha256": "853092519b94146d64851cb52c2bd2140387e8da02559f54435895ea89c96146",
-      "sha256": "20b417d476fca128afd1d4f8edc397c17fd4129edac56eff0c809b96f5a3d066",
-      "mode": "stage-adapted"
-    },
-    {
-      "path": "tests/test-plugin-install.ps1",
-      "sourceSha256": "5bfab06be91b21bae2f8e0b0f4774fa9a24ea15c1105d0f97bb684be8be05cb3",
-      "sha256": "5bfab06be91b21bae2f8e0b0f4774fa9a24ea15c1105d0f97bb684be8be05cb3",
+      "path": "tests/vrless/VrlessSmoke.cpp",
+      "baselineSha256": "695531b1b3c354e822dc5a1bde56570486cb00566cdb8a6ee5a727b362b14e05",
+      "sourceBaselineSha256": "ff848b17d3b916c885bdb48bf3f10e4a44f2408bbb0114f2c401ddefc58f1cb7",
+      "sha256": "94d05bc74999a61daea347826ade2e7dd8359c6879a0071d41be1d095f576495",
+      "sourceSha256": "94d05bc74999a61daea347826ade2e7dd8359c6879a0071d41be1d095f576495",
       "mode": "exact-source"
     }
   ]

@@ -30,6 +30,10 @@ void Shutdown() {}
 const GakuDesktopUiService* GetService() { return nullptr; }
 const GakuDesktopWindowService* GetWindowService() { return nullptr; }
 const GakuAppearanceService* GetAppearanceService() { return nullptr; }
+GakuStatus SetFileDropTarget(const char*, const GakuFileDropTarget*) { return GAKU_E_UNAVAILABLE; }
+GakuStatus PollFileDrop(const char*, uint32_t, GakuFileDropResult*, uint32_t, char*) {
+    return GAKU_E_UNAVAILABLE;
+}
 GakuStatus RequestShowPanel(const char*) { return GAKU_E_UNAVAILABLE; }
 void ToggleManager() {}
 bool WantsTextInput() { return false; }
@@ -317,6 +321,21 @@ int wmain(int argc, wchar_t** argv) {
                 "VRify attempted a conflicting lease instead of using the shared provider");
             Event("real-provider-owns-three-targets-vrify-did-not-take-over");
         }
+        const bool checkWarningDedup = evidence.scenario == L"native-runtime-missing";
+        if (checkWarningDedup) {
+            const auto retryDeadline = GetTickCount64() + 6000;
+            do {
+                Check(diagnostics.getSnapshot(sizeof(evidence.before), &evidence.before) == GAKU_OK,
+                    "retry snapshot read failed");
+                if (evidence.before.backendAttempts >= 3 && evidence.before.runtimeName &&
+                    std::strcmp(evidence.before.runtimeName, "Unavailable") == 0) break;
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            } while (GetTickCount64() < retryDeadline);
+            Check(evidence.before.backendAttempts >= 3 && evidence.before.runtimeName &&
+                std::strcmp(evidence.before.runtimeName, "Unavailable") == 0 &&
+                evidence.before.unavailableReason == GAKU_VRIFY_UNAVAILABLE_RUNTIME_MISSING,
+                "unavailable warning test did not exercise repeated backend attempts");
+        }
         AssertNoLocalify();
         const auto shutdownStarted = GetTickCount64();
         GakuLoader::Shutdown();
@@ -327,6 +346,16 @@ int wmain(int argc, wchar_t** argv) {
         Check(diagnostics.getSnapshot(sizeof(evidence.after), &evidence.after) == GAKU_OK, "retained diagnostic service became invalid");
         Check(evidence.after.lifecyclePhase == GAKU_VRIFY_PHASE_STOPPED, "plugin did not report STOPPED");
         Check(vr.isVrActive() == 0 && vr.isLiveGazeActive() == 0, "retained status service remained active after shutdown");
+        if (checkWarningDedup) {
+            std::ifstream hostLog(GakuLoader::LogPath(), std::ios::binary);
+            const std::string text((std::istreambuf_iterator<char>(hostLog)), std::istreambuf_iterator<char>());
+            const std::string warning = "VR unavailable: runtime-missing";
+            size_t count = 0;
+            for (size_t at = text.find(warning); at != std::string::npos;
+                 at = text.find(warning, at + warning.size())) ++count;
+            Check(count == 1, "unchanged unavailable reason produced repeated host warnings");
+            Event("runtime-retried-with-one-unavailable-warning");
+        }
         if (unity) {
             for (uint32_t i = 0; i < 4; ++i)
                 if (std::memcmp(originalBytes[i].data(), targets[i], originalBytes[i].size()) == 0) ++evidence.restored;

@@ -43,9 +43,6 @@
 
 #ifdef GKMS_WINDOWS
     #include "host/VrWindowsPlatform.hpp"
-    #ifndef GAKU_VRIFY_HOSTED
-    #include "host/localify/ModLoader.hpp"
-    #endif
     #include "vr/VrRuntime.hpp"
     #include "vr/VrFreeCamera.hpp"
     #include "vr/camera/FollowSmoothingProbe.hpp"

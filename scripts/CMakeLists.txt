@@ -37,7 +37,7 @@ if(VR_BUILD_MODE STREQUAL "Plugin")
         message(FATAL_ERROR "GakuLoader optional paths SDK header missing: ${GAKULOADER_SDK_DIR}/GakuPaths.h")
     endif()
     list(FILTER SOURCES EXCLUDE REGEX "/src/(main\\.cpp|windowsPlatform\\.cpp|dllproxy/.*)$")
-    list(FILTER SOURCES EXCLUDE REGEX "/src/host/(VrBootstrap\\.cpp|VrWindowsPlatform\\.cpp|localify/ModLoader\\.cpp)$")
+    list(FILTER SOURCES EXCLUDE REGEX "/src/host/(VrBootstrap\\.cpp|VrWindowsPlatform\\.cpp)$")
     list(FILTER SOURCES EXCLUDE REGEX "/src/hooks/HookManager\\.cpp$")
     list(FILTER SOURCES EXCLUDE REGEX "/src/resourceUpdate/.*$")
     list(FILTER SOURCES EXCLUDE REGEX "/src/gkmsGUI/(gkmsGUIMain\\.cpp|gkmsGUILoop\\.cpp)$")
@@ -49,6 +49,14 @@ if(VR_BUILD_MODE STREQUAL "Plugin")
     target_compile_definitions(${VR_TARGET} PRIVATE GAKU_VRIFY_HOSTED=1)
 else()
     list(FILTER SOURCES EXCLUDE REGEX "/src/host/(GakuVrifyPlugin\\.cpp|HostedPlatform\\.cpp|HostedHooks\\.cpp)$")
+    # cpprestsdk's JSON header deletes a forward-declared private type in an
+    # inline constructor. Keep its standalone consumers on C++20; C++23's
+    # constexpr unique_ptr destructor rejects that header on current MSVC.
+    set_source_files_properties(
+        "${ROOT}/src/main.cpp" "${ROOT}/src/windowsPlatform.cpp"
+        "${ROOT}/src/host/VrBootstrap.cpp" "${ROOT}/src/host/VrWindowsPlatform.cpp"
+        "${ROOT}/src/resourceUpdate/resourceUpdate.cpp"
+        PROPERTIES COMPILE_OPTIONS "/std:c++20;/permissive")
     file(GLOB_RECURSE MINHOOK_SOURCES CONFIGURE_DEPENDS "${ROOT}/deps/minhook/src/*.c")
     add_library(minhook STATIC ${MINHOOK_SOURCES})
     target_include_directories(minhook PUBLIC "${ROOT}/deps/minhook/include")

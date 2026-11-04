@@ -99,6 +99,28 @@ The original standalone mode is separate from the GakuLoader plugin:
 
 Its output is `build/bin/x64/Release/version.dll`, and its package is `build/vr-package/`. It supplies a proxy rather than a GakuLoader plugin; do not install both proxies together. The upstream Releases refer to this standalone workflow, not a new plugin binary certification.
 
+Standalone retains the original version proxy, bootstrap, MinHook backend and Localify GUI hotkey. It does not load the Plugin-mode DLLs in `gakumas-local/plugins/`; the retired embedded plugin scanner and its API have been removed. The Standalone cpprest consumers use C++20 locally to avoid the incomplete JSON type error in that dependency with current MSVC.
+
+After building Standalone, check the production DLL in an isolated native fixture:
+
+```powershell
+./tests/test-proxy-exports.ps1
+./tests/test-hook-manager.ps1
+./tests/test-standalone-smoke.ps1
+```
+
+The smoke check exercises the real proxy/bootstrap, system version forwarding, missing XR loader and worker stop. It also checks configuration bytes and the working directory. It launches only a newly generated fixture, with no real game, Unity metadata or OpenXR session.
+
+## Returning from Plugin to Standalone
+
+Standalone reads `gakumas-local/config.json`, `gakumas-local/localizationConfig.json` and `gakumas-vr/config.json`. It does not read the Loader's managed Configs root or active-layout record, so retained legacy settings may be older than those last saved in Plugin mode.
+
+1. Close the game and back up the managed VR config, any existing `gakumas-vr/config.json`, and the DLLs being replaced.
+2. To retain the current VR preferences, explicitly copy the selected managed config (normally `gakumas-local/Configs/gaku.vrify/config.json`) to `gakumas-vr/config.json`. Keep both backups; this selects settings without reverse migration or synchronization.
+3. Replace GakuLoader's `version.dll` with the intended Standalone VRify `version.dll` and its matching `openxr_loader.dll`. Use the explicit Standalone commands above for this repository's build. Its installer merges legacy settings and sets diagnostic logging from `-Probe`.
+
+Plugin DLLs, managed configs and PluginData may remain on disk. Standalone saves update the legacy VR config only. Localify settings and translation resources use their legacy locations separately; copying the VR config does not move them. The plugin installer's `Restore.ps1` restores package files and preserves data; it does not select the current Standalone settings.
+
 ## Troubleshooting
 
 - Missing SDK: check `sdk/gakuloader/GakuPlugin.h`, or the explicit override directory, before building.

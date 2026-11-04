@@ -1,7 +1,9 @@
 # Hosted VRify first-use configuration
 
-This describes first-use compatibility. Existing installations are not relocated
-until the explicit [standard-layout migration](CONFIG_MIGRATION_V2_20261102.md).
+This describes the phase-one compatibility layout. The current managed layout
+and explicit existing-install migration are specified in
+[layout v2](CONFIG_MIGRATION_V2_20261102.md). Existing installations are not
+automatically relocated.
 
 ## Selection and compatibility
 

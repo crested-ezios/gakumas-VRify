@@ -34,6 +34,8 @@ The generic installer conservatively refuses full Unity VR alongside Localify/Mo
 
 Standalone mode remains explicit: `build.ps1 -Mode Standalone`, `package-vr.ps1`, and `install-to-game.ps1 -Mode Standalone`. The upstream standalone Releases are separate from this plugin package.
 
+Standalone retains its original proxy bootstrap and hook backend without GakuLoader. The retired embedded plugin scanner and its private API are removed. To keep preferences changed in the managed layout, close the game, back up both configs, and explicitly copy the selected managed VR config to `gakumas-vr/config.json` before replacing the proxy. Standalone does not synchronize those settings back to Plugin mode. See [Returning from Plugin to Standalone](../BUILDING.md#returning-from-plugin-to-standalone); package restoration does not perform these selection steps.
+
 ## Runtime and shared interfaces
 
 - `GakuPlugin_Query` negotiates Loader ABI v1 without starting threads or XR. Activation queries log/runtime/hooks/actor-entry and the optional paths service. It consumes committed standard settings, or compatible legacy settings until explicit migration. Known mixed VR fields can be imported once without Localify resource business. Fresh initialization uses embedded release defaults. Invalid/unsupported settings or missing committed data disable VR without overwriting the original or silently falling back.

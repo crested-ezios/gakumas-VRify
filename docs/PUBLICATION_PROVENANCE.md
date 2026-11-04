@@ -65,3 +65,26 @@ movement/rotation without VR was accepted for the historical paired build. With 
 active, Motion camera control remains a Known Issue. Compilation and synthetic
 checks do not establish successful headset rendering or general camera composition.
 See [the integration guide](GAKULOADER_PLUGIN.md) and dated reports for limits.
+
+## Managed configuration and dual-mode maintenance
+
+The managed-configuration refresh at `ce7cdba63f352bea230bf5beb3adcfc336720264`
+projects source checkpoint `e6b17a21c94b30e2d94a925b5dcb45c742f19b26`, including
+`b50c97ad5c459b7372ac188e868e43186ef867fd` and the layout-v2 migration. It retains
+the public SDK, compiler selection, offline build and packaging adaptations.
+
+The subsequent maintenance source is
+`3d51912ba73307e078473603b70588ab8b631686`. It removes the retired embedded
+ModLoader/API and dispatch sites while retaining the original Standalone proxy,
+bootstrap and MinHook backend. `VrBootstrap.cpp` and `HookManager.cpp` remain
+identical to the pre-hosted `c353d1a847635f69a2547c55c146614962b012fe` baseline.
+Five Standalone cpprest consumers use a local C++20 compiler option; repeated XR
+availability retries notify the host only when the unavailable reason changes.
+The added Standalone fixture and retry assertion are synthetic checks, with the
+same runtime and headset limits described above.
+
+This preparation keeps the public build/test entry points, installed SDK default,
+component notices and migration protocol. It does not import internal handoffs,
+raw logs, dependency caches or the separate historical private candidate's review
+metadata. `SOURCE_MANIFEST.json` maps this maintenance projection and its public
+adaptations to the prior staged checkpoint.

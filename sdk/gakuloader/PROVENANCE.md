@@ -1,16 +1,18 @@
 # GakuLoader consumer SDK
 
-`GakuPlugin.h` is the unmodified 295-line C ABI header from GakuLoader
+`GakuPlugin.h` is the unmodified 298-line C ABI header from GakuLoader
 `include/GakuPlugin.h`. Source checkpoint:
-`6db0f56440b183d37b57c467d68b452d13eb3d47`; the later documentation checkpoint
-`c4c302f33b765a45fc81556cf5df276da424a70d` preserves identical header bytes.
+`ed5ad70819907c0a0f5acc25e804b0aea205fa57`, using its canonical LF Git blob.
 
-SHA256: `c02e006180e464a770bd31df52e89f5d539ceaaf4978f4e056734b5a5ca00abd`.
+SHA256: `12f4e4db22ff0505990b66cfeaf97b1cae54486c9eb415e7efc3adfd9984867e`.
+Relative to the previously included SDK, it appends two appearance-theme enum
+values and clarifies hotkey identity comments; ABI v1 structures and signatures
+are unchanged.
 
 `GakuPaths.h` is the unmodified optional paths-service declaration from GakuLoader
-checkpoint `0426648bd0601486347513af200aa4167a9fa09c`, `include/GakuPaths.h`.
+checkpoint `ed5ad70819907c0a0f5acc25e804b0aea205fa57`, `include/GakuPaths.h`.
 SHA256: `a1182d4903c642299fe28e3687a46ac23c19dfdb40e47a83e84da7af52865ea3`.
-That checkpoint preserves identical `GakuPlugin.h` bytes. Paths service v1 adds
+It is byte-identical to the earlier `0426648` paths header. Paths service v1 adds
 owner-bound UTF-16 Configs/UserData/PluginData/Cache/Logs/Temp roots without changing
 the existing Loader ABI v1. Both public headers are build inputs; running on an
 older host is limited to compatible legacy layouts.
