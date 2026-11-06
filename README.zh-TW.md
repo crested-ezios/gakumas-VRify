@@ -17,11 +17,13 @@
 
 ## 使用外掛整合版
 
-請使用配套的 GakuLoader 與外掛套件。自行編譯請參閱[建置指南](BUILDING.md)；公開 Loader SDK 標頭已隨倉庫提供，編譯外掛不需要私有 Loader 實作。
+請使用配套的 GakuLoader 與外掛套件。自行編譯請參閱[建置指南](BUILDING.md)；發布原始碼隨附公開 Loader SDK；開發倉庫預設使用相鄰的 GakuLoader SDK。編譯外掛不需要私有 Loader 實作。
 
-安裝前關閉遊戲。外掛套件將 `GakuVRify.dll` 放入 `gakumas-local/plugins/`，OpenXR loader 放在遊戲執行檔旁，VR 設定位於 `gakumas-vr/`。GakuLoader 另行安裝。套件清單、設定保留與還原方式見[外掛指南](docs/GAKULOADER_PLUGIN.md)。
+安裝前關閉遊戲，並使用配套的完整安裝包。將 `GakuVRify.dll` 放入 `GakuLoader/plugins/`，`openxr_loader.dll` 放在遊戲執行檔旁。全新設定使用 `GakuLoader/Configs/gaku.vrify/`，狀態和診斷記錄分別使用 `GakuLoader/PluginData/gaku.vrify/`、`GakuLoader/Logs/gaku.vrify/`。詳見[全新安裝指南](docs/FRESH_INSTALL_GAKULOADER.md)。
 
-通用安裝程式無法驗證外部 Localify/Motion provider 是否配套，因此仍保守拒絕完整 Unity VR 混裝。共用橋接已實作；該安裝程式不負責自動升級並驗證整組元件。
+既有 VR 設定可繼續原位使用；變更布局前請備份。[歷史遷移文件](docs/CONFIG_MIGRATION_V2_20261102.md)與目前原生遷移工具仍以舊 `gakumas-local` 為目標，不能用作新 `GakuLoader/` 根目錄的安裝工具。
+
+通用的 `package-plugin.ps1` 和 `install-plugin.ps1` 仍使用舊 `gakumas-local` 套件布局，不適用於新根的全新安裝。通用安裝程式也無法驗證外部 provider 是否配套，因此仍保守拒絕完整 Unity VR 與 Localify/Motion 混裝。
 
 [上游 Releases](https://github.com/KagaminTheMirror/gakumas-VRify/releases) 提供的是**獨立代理版**，屬於另一條安裝流程，不能據此認定包含此分支的外掛整合。請勿在同一安裝中混用獨立代理與 GakuLoader 代理。
 
@@ -40,4 +42,4 @@
 
 公開檢查使用合成測試資料與 mock host。選用的正式宿主、Localify、Motion 原始碼整合測試需要另行提供對應原始碼，見[建置指南](BUILDING.md)。
 
-專案採用 [GPL-3.0](LICENSE)。隨附 Loader SDK 保留 [MIT 授權](sdk/gakuloader/LICENSE)；其他元件及控制器插圖保留各自條款，見[第三方通知](THIRD_PARTY_NOTICES.md)。倉庫不包含遊戲資源或遊戲安裝檔案。
+專案採用 [GPL-3.0](LICENSE)。Loader SDK 保留 MIT 授權；其他元件及控制器插圖保留各自條款，見[第三方通知](THIRD_PARTY_NOTICES.md)。倉庫不包含遊戲資源或遊戲安裝檔案。

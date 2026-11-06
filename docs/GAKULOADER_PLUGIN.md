@@ -1,39 +1,29 @@
 # GakuVRify plugin integration
 
-This branch builds the current GakuLoader-hosted `GakuVRify.dll`. It includes Localify camera/render sharing and the Motion begin-camera provider. The dated reports below describe particular artifacts and observations; they do not automatically validate a newly built DLL.
+This source builds the GakuLoader-hosted `GakuVRify.dll`, with Localify camera/render sharing and the Motion begin-camera provider. Historical reports describe their own builds and observations; they do not automatically validate a newly built DLL.
 
-## Build and package
+## Build and install
 
-Follow [BUILDING.md](../BUILDING.md) for toolchain/dependency setup:
+Follow [BUILDING.md](../BUILDING.md) for toolchain and checkout-specific SDK defaults. Both repositories support these PowerShell 7 commands:
 
 ```powershell
 ./build.ps1 -Mode Plugin -Configuration Release
 ./tests/test-hosted-plugin.ps1 -Configuration Release
-./package-plugin.ps1 -Configuration Release
 ```
 
-The default Loader SDK is [`sdk/gakuloader/`](../sdk/gakuloader/PROVENANCE.md). `-LoaderSdkDirectory` can explicitly select a compatible alternate ABI header. Plugin compilation and public mock-host tests do not require the Loader implementation or private sibling repositories.
+The output is `build/bin/plugin/x64/Release/GakuVRify.dll`. The release checkout includes the public Loader SDK; the development checkout defaults to a sibling GakuLoader SDK. `-LoaderSdkDirectory` selects a compatible alternative. Public mock-host tests do not require private Loader or Motion implementations.
 
-Output: `build/bin/plugin/x64/Release/GakuVRify.dll`; package: `build/plugin-package/`.
+For a new `GakuLoader/` installation, use the coordinated complete package and follow the [fresh-install guide](FRESH_INSTALL_GAKULOADER.md): the VRify DLL is in `GakuLoader/plugins/`, the OpenXR loader is beside `gakumas.exe`, and the plugin's managed config, state and logs are under `GakuLoader/Configs/gaku.vrify/`, `GakuLoader/PluginData/gaku.vrify/` and `GakuLoader/Logs/gaku.vrify/` respectively.
 
-```text
-gakumas-local/plugins/GakuVRify.dll
-openxr_loader.dll
-gakumas-vr/config.json
-gakumas-vr/version.txt
-gakumas-vr/licenses/
-plugin-package.json
-```
+The generic `package-plugin.ps1` still produces a `gakumas-local` package, and `install-plugin.ps1` installs that old layout. The native migration utility also targets the old `gakumas-local` root. **Do not use them as the fresh installer for the new root.** The generic installer conservatively refuses full Unity VR alongside Localify/Motion if it cannot verify the matching providers. A complete matched package is necessary; do not infer compatibility from filenames alone.
 
-Install GakuLoader separately. With the game closed, `install-plugin.ps1 -GameRoot '<game directory>'` verifies the package/build receipts, preserves an existing VR configuration and records backups plus `Restore.ps1` in `build/plugin-deployments/`. It does not replace GakuLoader's `version.dll`, read Localify configuration or install translation data. Running games are refused.
+Existing dedicated settings may remain selected at `gakumas-vr/config.json`; preserve backups before changing layouts. The dated [first-use compatibility](CONFIG_LAYOUT_20261102.md) and [layout v2 migration](CONFIG_MIGRATION_V2_20261102.md) records describe their original old-root workflow, not a migration command for the new root. Restoring program files is not a reverse data migration.
 
-The generic installer conservatively refuses full Unity VR alongside Localify/Motion. It cannot establish that those external components provide the matching bridge versions, and it does not upgrade the whole provider/consumer pair. The bridges are implemented; historical coordinated deployments are described in [camera/render coexistence](CAMERA_COEXIST_20261027.md) and [Motion camera coexistence](MOTION_CAMERA_COEXIST_20261027.md). Do not treat those records as a generic upgrade script.
-
-Standalone mode remains explicit: `build.ps1 -Mode Standalone`, `package-vr.ps1`, and `install-to-game.ps1 -Mode Standalone`. The upstream standalone Releases are separate from this plugin package.
+Standalone uses its own proxy and legacy configuration. Do not combine its `version.dll` with GakuLoader's proxy. When switching, close the game, back up both sets of settings and select the intended standalone configuration explicitly; see [BUILDING.md](../BUILDING.md#standalone-proxy-workflow).
 
 ## Runtime and shared interfaces
 
-- `GakuPlugin_Query` negotiates Loader ABI v1 without starting threads or XR. Activation queries the log/runtime/hooks/actor-entry services and loads only `gakumas-vr/config.json`; missing/malformed configuration leaves VR disabled.
+- `GakuPlugin_Query` negotiates Loader ABI v1 without starting threads or XR. Activation queries log/runtime/hooks/actor-entry and the optional paths service. It consumes committed standard settings, or compatible legacy settings until explicit migration. Known mixed VR fields can be imported once without Localify resource business. Fresh initialization uses embedded release defaults. Invalid/unsupported settings or missing committed data disable VR without overwriting the original or silently falling back.
 - Runtime-ready uses the host's attached IL2CPP worker. Plugin mode excludes the second proxy bootstrap, Localify desktop GUI/resource updater and nested plugin scanner.
 - Executable hook requests use the host's owner-bound `acquireBatch`. No MinHook implementation is linked into the plugin. A failed initial lease batch retains originals/status, prevents XR startup and releases only this owner's leases.
 - The host owns `CampusActorController::LateUpdate`; VRify registers BEFORE sampling and AFTER natural-gaze callbacks. This does not establish final-pose/gaze composition with Motion's later actor callback.

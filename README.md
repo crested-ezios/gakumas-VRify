@@ -17,11 +17,13 @@ This branch contains the current **GakuLoader plugin integration**, built as `Ga
 
 ## Use the plugin integration
 
-Use a matching GakuLoader installation and plugin package. For a source build, follow [BUILDING.md](BUILDING.md); the public Loader SDK header is included, and no private Loader implementation is needed to compile the plugin.
+Use a matching GakuLoader installation and plugin package. For a source build, follow [BUILDING.md](BUILDING.md); the release source includes the public Loader SDK; the development checkout uses a sibling GakuLoader SDK by default. No private Loader implementation is needed to compile the plugin.
 
-Close the game before installing. The plugin package places `GakuVRify.dll` in `gakumas-local/plugins/`, the OpenXR loader beside the game executable, and VR settings under `gakumas-vr/`. GakuLoader is installed separately. See the [plugin guide](docs/GAKULOADER_PLUGIN.md) for package contents, configuration preservation and recovery.
+Close the game before installing. For a fresh installation use the matched complete package: `GakuVRify.dll` belongs in `GakuLoader/plugins/`, and `openxr_loader.dll` beside the game executable. Fresh settings use `GakuLoader/Configs/gaku.vrify/`; state and diagnostic logs use `GakuLoader/PluginData/gaku.vrify/` and `GakuLoader/Logs/gaku.vrify/`. See the [fresh-install guide](docs/FRESH_INSTALL_GAKULOADER.md).
 
-The generic installer conservatively rejects full Unity VR alongside Localify/Motion because it cannot verify a matching external provider pair. The shared bridges are implemented; this guard is not an automatic paired-component upgrade mechanism.
+Existing VR settings remain usable in place; preserve backups before changing layouts. The historical [migration documentation](docs/CONFIG_MIGRATION_V2_20261102.md) describes the old `gakumas-local` root. The current native migration tool still targets that old root and must not be used as an installer for the new `GakuLoader/` root.
+
+The generic `package-plugin.ps1` and `install-plugin.ps1` still use the old `gakumas-local` package layout and are not the fresh-install workflow. The generic installer also conservatively rejects full Unity VR alongside Localify/Motion because it cannot verify the matching provider pair.
 
 The [upstream Releases](https://github.com/KagaminTheMirror/gakumas-VRify/releases) distribute the **standalone proxy**. They are a separate workflow and do not establish that a package contains this branch's plugin integration. Do not combine the standalone proxy and GakuLoader's proxy in one installation.
 
@@ -40,4 +42,4 @@ The [upstream Releases](https://github.com/KagaminTheMirror/gakumas-VRify/releas
 
 The public checks use synthetic fixtures and a mock host. Optional production-host/Localify/Motion integration checks require separately supplied source trees; see [BUILDING.md](BUILDING.md).
 
-The project is distributed under [GPL-3.0](LICENSE). The vendored Loader SDK retains its [MIT license](sdk/gakuloader/LICENSE). Other components and controller illustrations retain their own terms; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Game assets and game installations are not included.
+The project is distributed under [GPL-3.0](LICENSE). The Loader SDK retains its MIT license. Other components and controller illustrations retain their own terms; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Game assets and game installations are not included.
