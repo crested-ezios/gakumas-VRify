@@ -2,44 +2,99 @@
 
 # gakumas-VRify
 
-为《学园偶像大师》（学園アイドルマスター）加入 VR 支持的非官方 Mod，**适用于 Windows x64 DMM 版**，基于 [gkms-localify-dmm](https://git.chinosk6.cn/chinosk/gkms-localify-dmm)。
+[源码构建](BUILDING.md) · [插件安装与接口](docs/GAKULOADER_PLUGIN.md) · [镜头共存记录](docs/MOTION_CAMERA_COEXIST.md) · [上游来源](UPSTREAM.md)
 
-本分支包含当前 **GakuLoader 插件集成版 `GakuVRify.dll`**，已实现 Localify camera/render 与 Motion begin-camera 共享桥。源码默认构建 Plugin；原独立代理版保留为显式选项。
+## 这是什么
 
-[源码构建](BUILDING.md) · [插件安装与接口](docs/GAKULOADER_PLUGIN.md) · [镜头兼容范围](docs/MOTION_CAMERA_COEXIST_20261027.md) · [源码归属](UPSTREAM.md)
+gakumas-VRify 为《学园偶像大师》（PC DMM 版）添加 VR 支持，基于 [gkms-localify-dmm](https://git.chinosk6.cn/chinosk/gkms-localify-dmm) 开发。它通过 OpenXR 将游戏画面输出至头显，并提供头部跟踪和手柄操作。
 
-## 使用前请阅读
+本分支包含 **GakuLoader 插件集成版 `GakuVRify.dll`**，已实现 Localify camera/render 与 Motion begin-camera 共享桥接。源码默认构建插件模式，独立代理版（Standalone `version.dll`）保留为显式构建选项。桥接实现、构建检查与游戏中的兼容性验收各有范围，见下文说明。
 
-- 游戏本身并非面向 VR 开发，可能出现人物缺失、位置错误和画面闪烁。
-- **请注意眩晕和闪烁风险。如感到不适，请停止使用。**
-- 使用本地游戏修改前，请查阅包括[用户协议（日文）](https://legal.bandainamcoent.co.jp/terms/nejp)在内的相关规则，并对自己的账号和使用后果负责。
-- 本项目为粉丝自制，与上游项目及游戏相关方无隶属或背书关系。
+## 准备工作与依赖
 
-## 使用插件集成版
+### 使用前注意事项
+- 《学园偶像大师》原本并非面向 VR 环境开发，在某些过渡界面可能出现模型暂时缺失或画面闪烁。
+- **请注意晕动症与闪烁风险**。初次使用建议采取坐姿，若感到任何眩晕或眼部不适，请立即停止使用并休息。
+- 本项目为玩家自制开源工具，与游戏官方版权方及上游项目无隶属关系。使用本地游戏模组前请参阅游戏官方[用户协议（日文）](https://legal.bandainamcoent.co.jp/terms/nejp)，并自行承担账号安全风险。
 
-使用配套的 GakuLoader 与插件包。自行编译请参阅[构建指南](BUILDING.md)；公开 Loader SDK 头文件已随仓库提供，编译插件不需要私有 Loader 实现。
+### 硬件与软件环境
+- 操作系统：Windows 10 / 11 64 位（x64）
+- VR 硬件：支持 OpenXR 标准的 VR 头显（如 Meta Quest 3 / Quest 2、PICO 4 或 PC VR 头显）
+- 串流软件：Virtual Desktop、Meta Quest Link 或 SteamVR，并确保已将默认 OpenXR 运行时正确设置为对应软件
+- 宿主程序：配套的 GakuLoader，按其安装包说明单独安装
 
-安装前退出游戏。插件包将 `GakuVRify.dll` 放入 `gakumas-local/plugins/`，OpenXR loader 放在游戏可执行文件旁。全新配置使用 `gakumas-local/Configs/gaku.vrify/`，状态和诊断日志分别使用 `PluginData/gaku.vrify/`、`Logs/gaku.vrify/`。GakuLoader 单独安装；包清单和恢复方式见[插件指南](docs/GAKULOADER_PLUGIN.md)。
+### 文件放置路径
 
-已有 VR 配置可继续原位使用，直到显式执行[计划、备份和迁移](docs/CONFIG_MIGRATION_V2_20261102.md)。随包提供的原生工具保留旧配置、迁移记录和日志；安装包只含配置示例，不覆盖活动设置。
+退出游戏后，将插件与运行库放入游戏根目录中：
 
-通用安装器无法验证外部 Localify/Motion provider 是否配套，因此仍保守拒绝完整 Unity VR 混装。共享桥已经实现；该安装器不负责自动升级和验证整组组件。
+```text
+<游戏根目录>/
+├── gakumas.exe
+├── openxr_loader.dll                        # OpenXR 核心运行库
+├── version.dll                              # GakuLoader 核心
+└── GakuLoader/
+    ├── Configs/gaku.vrify/                  # VR 配置文件
+    ├── PluginData/gaku.vrify/               # 布局状态数据
+    ├── Logs/gaku.vrify/                     # VR 诊断日志
+    └── plugins/
+        ├── GakuVRify.dll                    # VR 插件核心
+        └── GakuMotion.dll                   # 可选动作播放插件
+```
 
-[上游 Releases](https://github.com/KagaminTheMirror/gakumas-VRify/releases) 提供的是**独立代理版**，属于另一条安装路径，不能据此认定包含本分支的插件集成。不要在同一安装中混用独立代理与 GakuLoader 代理。
+> **注意**：
+> 1. 上游官方 Releases 发布的通常是独立代理版（以 `version.dll` 形式替换）。若搭配 GakuLoader 一同使用，请使用本分支编译的 `GakuVRify.dll` 插件版，切勿在根目录混入其它独立版的 `version.dll`。
+> 2. 若要升级或迁移已有配置，可查阅 [配置迁移指南](docs/CONFIG_MIGRATION_V2.md)。
 
-## 兼容性与已知限制
+全新安装请使用相互配套的完整安装包，详见[全新安装指南](docs/FRESH_INSTALL_GAKULOADER.md)。已有专用 VR 配置可以继续原位使用，变更前请备份。通用 `package-plugin.ps1`、`install-plugin.ps1` 和原生迁移工具仍以旧 `gakumas-local` 根为目标，不能直接用于新根的全新安装；通用安装脚本也无法确认外部 provider 是否配套，仍会拒绝完整 Unity VR 与 Localify/Motion 混装。
 
-- 历史头显测试覆盖 Quest 3 + Virtual Desktop，不代表其它设备或全部场景已验收。
-- 一组配套构建曾确认头显画面正常，并完成一次 Motion 动作播放，范围见[相机共享报告](docs/CAMERA_COEXIST_20261027.md)。
-- **已知问题：**无 VR 时的 Motion 手动镜头移动、旋转已确认；启用 VR 后 Motion 镜头控制仍会失效。begin-camera 共享桥没有解决剩余的调度问题，详见[镜头共存记录](docs/MOTION_CAMERA_COEXIST_20261027.md)。
-- 源码构建、合成检查、磁盘文件校验与游戏/头显验收分别记录。历史报告不自动认证新编译的 DLL；不支持热卸载。
+## 使用方法与快捷键
 
-## Quest 手柄操作指南
+### 启动流程
+1. 打开电脑上的 VR 串流平台（如 Virtual Desktop Streamer 或 Meta Quest Link），戴上头显并连接电脑。
+2. 启动《学园偶像大师》PC 版。启用 VR 且运行时、设备和 Unity 初始化成功后，插件才会输出双目画面。
+3. 使用配套组件时，可进入“偶像摄影”页面尝试 GakuMotion 动作播放；历史配套构建曾完成一次动作播放，不代表新 DLL 或所有场景已验收。
+
+### Quest 手柄操作指南
 
 ![Quest 手柄操作指南（简体中文）](docs/controller-guide/exports/gakumas-vrify-quest-guide-zh-CN.png)
 
-## 开发与许可
+- **Grip 长按**：打开或关闭 VR 设置菜单；进入面板调整模式后，Grip 用于抓取和缩放面板，不再切换菜单。
+- **左摇杆按住约 0.3 秒**：重置当前相机模式。
+- **左 X / Y 键**：分别切换相机模式和跟随角色。摇杆、扳机及右手按键的场景行为见上方操作图。
 
-公开检查使用合成夹具和 mock host。可选的生产宿主、Localify、Motion 源码联测需要另行提供对应源码，见[构建指南](BUILDING.md)。
+## 常见问题与排查
 
-项目采用 [GPL-3.0](LICENSE)。随附 Loader SDK 保留 [MIT 许可](sdk/gakuloader/LICENSE)；其它组件及控制器插图保留各自条款，见[第三方通知](THIRD_PARTY_NOTICES.md)。仓库不包含游戏资源或游戏安装文件。
+1. **VR 下 GakuMotion 运镜控制失效**：
+   - 这是尚未解决的排程兼容问题。历史配套构建只确认了无 VR 时 Motion 手动移动、旋转镜头恢复；VR 激活后 Motion 镜头控制仍失效，begin-camera 共享桥接尚未解决这项问题。该结果不涵盖导入镜头轨、所有场景或同时组合 Motion 运镜与头部跟踪。详情见 [镜头共存记录](docs/MOTION_CAMERA_COEXIST.md)。
+2. **头显没有画面或提示找不到 OpenXR 运行时**：
+   - 检查串流软件设置，确认已将 OpenXR 运行时设置为活动状态（例如在 Virtual Desktop 设置中勾选 Active OpenXR Runtime）。
+   - 确认游戏根目录下存在 `openxr_loader.dll`。
+   - 检查 `GakuLoader/Logs/gaku.vrify/` 目录中的诊断日志。
+3. **画面卡顿或掉帧**：
+   - 适当降低串流软件（如 Virtual Desktop）的编码分辨率或刷新率设置。
+   - 在游戏内图形设置中调低抗锯齿与阴影等级。
+
+## 源码构建
+
+### 编译环境要求
+- Windows 10 / 11 64 位
+- PowerShell 7（`pwsh`）、Git、Python 3.11+，且 `venv` 与 `pip` 可用
+- Visual Studio 2022+ 的桌面 C++ 工作负载、MSVC 14.40+ x64 工具集与 Windows SDK
+- 构建脚本安装锁定的 CMake 4.4.3 和 Conan 2.32.0；项目要求 CMake 4.0+
+- 首次准备依赖需要网络；离线构建须事先备齐锁定的上游源码、工具与依赖缓存，详见 [构建指南](BUILDING.md)
+- 发布源码包含公共 GakuLoader SDK；开发仓库默认使用相邻的 GakuLoader SDK，无需额外依赖私有宿主实现。
+
+### 编译命令
+在 `GakuVRify` 根目录下使用 PowerShell 7：
+
+```powershell
+# 编译 GakuLoader 插件版
+pwsh -NoProfile -File build.ps1 -Mode Plugin -Configuration Release
+```
+
+产物为 `build/bin/plugin/x64/Release/GakuVRify.dll`，原生配置迁移工具为 `build/tools/Release/vr-config-migration.exe`。通用插件打包脚本仍输出旧根布局；新根安装请使用[全新安装指南](docs/FRESH_INSTALL_GAKULOADER.md)所述的配套完整安装包。编译成功不代表游戏或头显验收通过；DLL 不支持热卸载。
+
+### 架构与许可
+- [插件指南与接口规范](docs/GAKULOADER_PLUGIN.md)
+- [相机共享报告](docs/CAMERA_COEXIST.md)
+- 项目遵循 [GPL-3.0 许可证](LICENSE)。GakuLoader SDK 遵循 MIT 许可证，第三方组件遵循各自许可，详见 [第三方通知](THIRD_PARTY_NOTICES.md)。

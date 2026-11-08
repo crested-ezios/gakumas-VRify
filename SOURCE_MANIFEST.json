@@ -31,7 +31,7 @@
   ],
   "excludedSourceEvidence": [
     {
-      "path": "docs/DUAL_MODE_VALIDATION_20261103.md",
+      "path": "docs/DUAL_MODE_VALIDATION.md",
       "reason": "Inventory artifact evidence is retained at its source; final staged validation binds the staged commit separately."
     }
   ],
@@ -40,12 +40,16 @@
       "path": "BUILDING.md",
       "baselineSha256": "b2fe8ce6c2544d084f32ef175f2d692664e165ee3880896d9987fd1baa9bd4a9",
       "sourceBaselineSha256": "bf1d4eae372219743a85438d0bad8e85f1b1b5ab5e9f2a35526504aa7b162276",
-      "sha256": "0f69fe03c2c5dedef006ff64ce20def7ce7c1910a9a5116579e76630c386d32c",
+      "sha256": "90cb3e8060ae61cc72d865568a7c1550862ac377964e488d613e7d82bc169d12",
       "sourceSha256": "347ac9aafc558ef5e1144656b421c021ff21bd43f68431847b03a160256a3076",
-      "mode": "stage-adapted"
+      "mode": "stage-adapted",
+      "documentation_sync_20261107": {
+        "previous_sha256": "0f69fe03c2c5dedef006ff64ce20def7ce7c1910a9a5116579e76630c386d32c",
+        "scope": "Public guidance aligned with the independent GakuLoader root; no source or runtime change."
+      }
     },
     {
-      "path": "docs/CONFIG_LAYOUT_20261102.md",
+      "path": "docs/CONFIG_LAYOUT.md",
       "baselineSha256": "7d8386df8ed9a65ecf43c00a128a23b99a24dd63ada22221d2b39fc165d4128b",
       "sourceBaselineSha256": "8fe48df8aad82274e043f9f8b2849f0a9bfedc030479b01fd400b2cfa74fae69",
       "sha256": "1775865d92f30076a0ab5fa83d03e17f52462a5d44f830034e2304b059b02f9c",
@@ -53,7 +57,7 @@
       "mode": "stage-adapted"
     },
     {
-      "path": "docs/CONFIG_MIGRATION_V2_20261102.md",
+      "path": "docs/CONFIG_MIGRATION_V2.md",
       "baselineSha256": "260c3c199a803fafbace23ff72bb2ba079c9216d398328031dd8946120fd4a3f",
       "sourceBaselineSha256": "d884a408ee26aaf2fa82dca298d405065b90387ca278fcd02f54e6af51ba4d62",
       "sha256": "39f1588bd53d0cac32da59d7877544afe56d765536ac23e157cfc8107808ca74",
@@ -64,9 +68,13 @@
       "path": "docs/GAKULOADER_PLUGIN.md",
       "baselineSha256": "5d819a983937bf283ce55768819e26417ba69d181535f117253b918d2fa95aaf",
       "sourceBaselineSha256": "19372b47444874d52ff650480c790fbacce722c725e0868d341299bccb6ec3a0",
-      "sha256": "5677c6637ca2ac5b6d9b7814057f63d5c19c4974ec04f7b72a036e914472687c",
+      "sha256": "19bc55c588ea64263e1daf789b0d0bb40c35da87e3dfb2e190a47592ed6b743a",
       "sourceSha256": "b4b7c370f38a349cbed85566bd04548a075ce6b599ee0fb002c0df9f46c41772",
-      "mode": "stage-adapted"
+      "mode": "stage-adapted",
+      "documentation_sync_20261107": {
+        "previous_sha256": "5677c6637ca2ac5b6d9b7814057f63d5c19c4974ec04f7b72a036e914472687c",
+        "scope": "Public guidance aligned with the independent GakuLoader root; no source or runtime change."
+      }
     },
     {
       "path": "docs/PUBLICATION_PROVENANCE.md",
@@ -197,10 +205,52 @@
       "mode": "stage-adapted-public-test"
     },
     {
-      "path": "docs/CAMERA_NULL_PROVIDER_20261104.md",
+      "path": "docs/CAMERA_NULL_PROVIDER.md",
       "sha256": "0aad59dfdacc03f27a1ba6696900b44872b80df9267b969c01475f19c8213660",
       "sourceSha256": "de140ceca7e409703ad1f5d2b74af2b6e23dfc38e5780d1cddeef1d8c6693fec",
       "mode": "stage-public-provenance"
+    },
+    {
+      "path": "README.zh-CN.md",
+      "sha256": "20a079098889bb950d4679c1586569a649905fa0dae5c4a91706b759a770a64e",
+      "bytes": 6874,
+      "mode": "stage-documentation-repair",
+      "review": "Current staged implementation, OpenXR action bindings, build.ps1 and camera coexistence limits; no inventory parallel code selected.",
+      "documentation_sync_20261107": {
+        "previous_sha256": "5e6f5d4aeacd071a4b41a9c91e58025b869b1b4d66c96953b682ce7b507f5a86",
+        "scope": "Public guidance aligned with the independent GakuLoader root; no source or runtime change."
+      }
+    },
+    {
+      "path": "README.md",
+      "sha256": "e9e31f79493347637840bb734e910e0ed698dc270eb312d39c6a13b989aab2fa",
+      "bytes": 4394,
+      "mode": "stage-documentation-sync",
+      "review": "Public guidance aligned with the independent GakuLoader root; no runtime change.",
+      "previous_sha256": "96cce198cb998c92d31a8a7dc99c632851c6cdd753788c24856418e253dfc2be"
+    },
+    {
+      "path": "README.zh-TW.md",
+      "sha256": "236abd5d865f683ba35b71efe99d59b8fb2dcafb06172d02944767511f21670c",
+      "bytes": 3944,
+      "mode": "stage-documentation-sync",
+      "review": "Public guidance aligned with the independent GakuLoader root; no runtime change.",
+      "previous_sha256": "50911bbae617942fa192c324c55a1e3b0fe9fe35c3d9053b02112a6b8db86c1e"
+    },
+    {
+      "path": "README.ja.md",
+      "sha256": "ba2277f41e992e49378d6e4174d903923ac58998d5ea3c0749e4e8bb0bc2e8b2",
+      "bytes": 5434,
+      "mode": "stage-documentation-sync",
+      "review": "Public guidance aligned with the independent GakuLoader root; no runtime change.",
+      "previous_sha256": "9e794195bb7a1bb56ab9021c7d890f6cf4fb14287817e56567ecbe814866f873"
+    },
+    {
+      "path": "docs/FRESH_INSTALL_GAKULOADER.md",
+      "sha256": "3a4043a8cb4be2bd8a1fa4aa11e6a7513b87784444972098da9397db34568898",
+      "bytes": 3280,
+      "mode": "stage-documentation-sync",
+      "review": "Public guidance aligned with the independent GakuLoader root; no runtime change."
     }
   ],
   "selectiveProjection": {
@@ -210,11 +260,36 @@
       "src/host/GakuVrifyUnity.hpp",
       "src/vr/unity/HostedUnity.inc.cpp",
       "tests/test-shared-camera-targets.py",
-      "docs/CAMERA_NULL_PROVIDER_20261104.md",
+      "docs/CAMERA_NULL_PROVIDER.md",
       "docs/PUBLICATION_PROVENANCE.md"
     ],
     "scope": "Null/partial hosted camera-target ownership only; no new ABI, dependency, prototype or unrelated source history.",
     "runtimeSourceExact": true,
     "userAcceptanceScope": "Reported desktop game camera recovery for the paired inventory build; staged binaries and active XR retain separate validation."
+  },
+  "documentation_repair_20261104": {
+    "date": "2026-11-04",
+    "base_staging_commit": "eb6fdec4c8dcb1f4c991df580da0e8a6fc6ff778",
+    "previous_manifest_sha256": "870b136874c5a8c4848156f88ac05e8ad2f245445da7491c2edcbda1f0078b0a",
+    "scope": "Authorized README/documentation corrections and humanizer-zh review against this staged code; no runtime, test, algorithm, parameter or vendor changes.",
+    "runtime_rebuilt": false,
+    "game_acceptance_added": false,
+    "remote_updated": false,
+    "changed_payload_files": [
+      "README.zh-CN.md"
+    ]
+  },
+  "documentation_sync_20261107": {
+    "previous_manifest_sha256": "01210cb9895b0a87aa9e4ba8a3f56eb3a26fa4ccf12e6f8af0159cca8c75b78a",
+    "changed_files": [
+      "README.md",
+      "README.zh-CN.md",
+      "README.zh-TW.md",
+      "README.ja.md",
+      "BUILDING.md",
+      "docs/GAKULOADER_PLUGIN.md",
+      "docs/FRESH_INSTALL_GAKULOADER.md"
+    ],
+    "scope": "Documentation only; original source and dependency provenance retained."
   }
 }
